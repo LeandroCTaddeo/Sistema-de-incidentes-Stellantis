@@ -6,29 +6,29 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.DetalleCasoAdminController"
-            style="-fx-background-color:#f4f6f8;">
+            stylesheets="@../resources/css/admin.css"
+            styleClass="case-root">
 
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT"
-              style="-fx-padding:15; -fx-background-color:white; -fx-border-color:#dcdcdc; -fx-border-width:0 0 1 0;">
-            <Button fx:id="btnVolver" text="← Volver"/>
+        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="case-topbar">
+            <Button fx:id="btnVolver" text="← Volver" styleClass="button-secondary"/>
             <Label fx:id="lblTituloCaso"
                    text="Expediente"
-                   style="-fx-font-size:24; -fx-font-weight:bold;"/>
+                   styleClass="page-title"/>
         </HBox>
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.30">
+        <SplitPane dividerPositions="0.30" styleClass="case-split">
 
-            <VBox spacing="10"
-                  style="-fx-padding:15; -fx-background-color:white;">
+            <VBox styleClass="case-sidebar">
 
                 <Label text="📁 Documentos del expediente"
-                       style="-fx-font-size:20px; -fx-font-weight:bold;"/>
+                       styleClass="case-sidebar-title"/>
 
                 <Button fx:id="btnBoletinOriginal"
                         maxWidth="9999"
+                        styleClass="document-button"
                         text="📄 Boletín original del empleado"/>
 
                 <VBox fx:id="contenedorBoletines"
@@ -38,25 +38,27 @@
 
                 <Button fx:id="btnNuevoBoletin"
                         maxWidth="9999"
+                        styleClass="button-primary"
                         text="➕ Nuevo boletín interno"/>
 
                 <Button fx:id="btnExportar"
                         maxWidth="9999"
+                        styleClass="button-secondary"
                         text="📄 Exportar expediente"/>
 
                 <Button fx:id="btnResolver"
                         maxWidth="9999"
+                        styleClass="button-success"
                         text="✔ Resolver caso"/>
 
             </VBox>
 
-            <ScrollPane fitToWidth="true">
+            <ScrollPane fitToWidth="true" styleClass="preview-scroll">
                 <VBox fx:id="panelVistaPrevia"
-                      spacing="12"
-                      style="-fx-padding:20;">
+                      styleClass="preview-panel">
 
                     <Label text="Seleccione un documento del expediente"
-                           style="-fx-font-size:18px; -fx-font-weight:bold;"/>
+                           styleClass="case-sidebar-title"/>
 
                 </VBox>
             </ScrollPane>

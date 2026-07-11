@@ -8,54 +8,55 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.ReportesController"
-            style="-fx-background-color:#f4f6f8;">
+            stylesheets="@../resources/css/admin.css"
+            styleClass="reports-root">
 
     <top>
-        <VBox spacing="12" style="-fx-padding:18; -fx-background-color:white;">
+        <VBox spacing="12" styleClass="reports-header">
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Label text="Reportes de incidentes"
-                       style="-fx-font-size:26; -fx-font-weight:bold;"/>
+                       styleClass="page-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="btnCerrar" text="Cerrar"/>
+                <Button fx:id="btnCerrar" text="Cerrar" styleClass="button-secondary"/>
             </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="8">
+            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="filter-row">
                 <Label text="Desde:"/>
                 <DatePicker fx:id="dpDesde"/>
                 <Label text="Hasta:"/>
                 <DatePicker fx:id="dpHasta"/>
                 <Button fx:id="btnActualizar" text="Actualizar"
-                        style="-fx-background-color:#4e84cc; -fx-text-fill:white; -fx-font-weight:bold;"/>
+                        styleClass="button-primary"/>
             </HBox>
         </VBox>
     </top>
 
     <center>
-        <ScrollPane fitToWidth="true">
-            <VBox spacing="18" style="-fx-padding:20;">
+        <ScrollPane fitToWidth="true" styleClass="reports-scroll">
+            <VBox styleClass="reports-content">
                 <HBox spacing="15">
                     <VBox spacing="6" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color:white; -fx-padding:18; -fx-background-radius:10;">
-                        <Label text="Total de incidentes" style="-fx-text-fill:#666;"/>
-                        <Label fx:id="lblTotal" text="0" style="-fx-font-size:30; -fx-font-weight:bold;"/>
+                          styleClass="metric-card">
+                        <Label text="Total de incidentes" styleClass="metric-label"/>
+                        <Label fx:id="lblTotal" text="0" styleClass="metric-value"/>
                     </VBox>
                     <VBox spacing="6" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color:white; -fx-padding:18; -fx-background-radius:10;">
-                        <Label text="Pendientes" style="-fx-text-fill:#666;"/>
-                        <Label fx:id="lblPendientes" text="0" style="-fx-font-size:30; -fx-font-weight:bold; -fx-text-fill:#d32f2f;"/>
+                          styleClass="metric-card">
+                        <Label text="Pendientes" styleClass="metric-label"/>
+                        <Label fx:id="lblPendientes" text="0" styleClass="metric-value,metric-danger"/>
                     </VBox>
                     <VBox spacing="6" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color:white; -fx-padding:18; -fx-background-radius:10;">
-                        <Label text="Resueltos" style="-fx-text-fill:#666;"/>
-                        <Label fx:id="lblResueltos" text="0" style="-fx-font-size:30; -fx-font-weight:bold; -fx-text-fill:#2e7d32;"/>
+                          styleClass="metric-card">
+                        <Label text="Resueltos" styleClass="metric-label"/>
+                        <Label fx:id="lblResueltos" text="0" styleClass="metric-value,metric-success"/>
                     </VBox>
                     <VBox spacing="6" HBox.hgrow="ALWAYS"
-                          style="-fx-background-color:white; -fx-padding:18; -fx-background-radius:10;">
-                        <Label text="Tiempo promedio de resolución" style="-fx-text-fill:#666;"/>
-                        <Label fx:id="lblTiempoPromedio" text="0 h" style="-fx-font-size:30; -fx-font-weight:bold;"/>
+                          styleClass="metric-card">
+                        <Label text="Tiempo promedio de resolución" styleClass="metric-label"/>
+                        <Label fx:id="lblTiempoPromedio" text="0 h" styleClass="metric-value"/>
                     </VBox>
                 </HBox>
 
-                <HBox spacing="18">
+                <HBox spacing="18" styleClass="chart-card">
                     <BarChart fx:id="chartAreas" title="Incidentes por área o sector"
                               animated="false" HBox.hgrow="ALWAYS" prefHeight="430">
                         <xAxis><CategoryAxis label="Área / sector"/></xAxis>

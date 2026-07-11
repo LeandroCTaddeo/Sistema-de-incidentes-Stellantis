@@ -8,6 +8,7 @@ import javafx.scene.image.ImageView;
 import models.Incidente;
 import models.Imagen;
 import dao.ImagenDAO;
+import services.VisorImagenService;
 
 import java.io.File;
 
@@ -91,20 +92,10 @@ public class BoletinEmpleadoController {
 
         contenedorImagenes.getChildren().clear();
 
-        for (Imagen img : imagenDAO.obtenerPorIncidente(incidente.getId())) {
-
-            File archivo = new File(img.getRuta());
-
-            if (archivo.exists()) {
-
-                ImageView vista = new ImageView(
-                        new Image(archivo.toURI().toString(),120,120,true,true)
-                );
-
-                contenedorImagenes.getChildren().add(vista);
-
-            }
-
+        var imagenes = imagenDAO.obtenerPorIncidente(incidente.getId());
+        for (Imagen img : imagenes) {
+            ImageView vista = VisorImagenService.crearMiniatura(img, imagenes, 120, 90);
+            if (vista != null) contenedorImagenes.getChildren().add(vista);
         }
 
     }

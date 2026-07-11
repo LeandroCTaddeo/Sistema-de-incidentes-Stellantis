@@ -6,6 +6,7 @@ import java.util.Optional;
 import dao.BoletinAdminDAO;
 import dao.UsuarioDAO;
 import dao.IncidenteDAO;
+import dao.ImagenDAO;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,11 +16,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import models.BoletinAdmin;
 import models.Incidente;
 import models.Usuario;
+import models.Imagen;
 import services.PDFService;
+import services.VisorImagenService;
 
 public class DetalleCasoAdminController {
 
@@ -41,6 +46,7 @@ public class DetalleCasoAdminController {
     private final BoletinAdminDAO boletinAdminDAO = new BoletinAdminDAO();
     private final PDFService pdfService = new PDFService();
     private final IncidenteDAO incidenteDAO = new IncidenteDAO();
+    private final ImagenDAO imagenDAO = new ImagenDAO();
 
     @FXML
     public void initialize() {
@@ -77,7 +83,7 @@ public class DetalleCasoAdminController {
         panelVistaPrevia.getChildren().clear();
 
         Label titulo = new Label("📄 Boletín original del empleado");
-        titulo.setStyle("-fx-font-size:22px; -fx-font-weight:bold;");
+        titulo.getStyleClass().add("detail-title");
 
         Label caso = new Label("Caso: " + valor(incidenteActual.getTitulo()));
         Label empleado = new Label("Empleado: " + valor(incidenteActual.getNombreEmpleado()));
@@ -88,6 +94,7 @@ public class DetalleCasoAdminController {
 
         Label descripcionTitulo = new Label("Descripción:");
         descripcionTitulo.setStyle("-fx-font-weight:bold;");
+        descripcionTitulo.getStyleClass().add("section-label");
 
         Label descripcion = new Label(valor(incidenteActual.getDescripcion()));
         descripcion.setWrapText(true);
@@ -97,15 +104,33 @@ public class DetalleCasoAdminController {
 
         panelVistaPrevia.getChildren().addAll(
                 titulo, caso, empleado, sector, prioridad, estado, fecha,
-                descripcionTitulo, descripcion, ayuda
+                descripcionTitulo, descripcion
         );
+
+        List<Imagen> imagenes = imagenDAO.obtenerPorIncidente(incidenteActual.getId());
+        if (!imagenes.isEmpty()) {
+            Label imagenesTitulo = new Label("Imágenes adjuntas:");
+            imagenesTitulo.getStyleClass().add("section-label");
+
+            FlowPane miniaturas = new FlowPane(10, 10);
+            for (Imagen adjunto : imagenes) {
+                ImageView miniatura = VisorImagenService.crearMiniatura(adjunto, imagenes, 150, 110);
+                if (miniatura != null) miniaturas.getChildren().add(miniatura);
+            }
+
+            Label ayudaImagen = new Label("Doble clic sobre una imagen para ampliarla o guardarla.");
+            ayudaImagen.getStyleClass().add("card-meta");
+            panelVistaPrevia.getChildren().addAll(imagenesTitulo, miniaturas, ayudaImagen);
+        }
+
+        panelVistaPrevia.getChildren().add(ayuda);
     }
 
     private void mostrarVistaPreviaBoletin(BoletinAdmin boletin) {
         panelVistaPrevia.getChildren().clear();
 
         Label titulo = new Label("📄 " + valor(boletin.getTitulo()));
-        titulo.setStyle("-fx-font-size:22px; -fx-font-weight:bold;");
+        titulo.getStyleClass().add("detail-title");
 
         Label fecha = new Label("Fecha creación: " + valor(
                 boletin.getFechaCreacion() != null ? boletin.getFechaCreacion().toString() : ""
@@ -118,12 +143,14 @@ public class DetalleCasoAdminController {
 
         Label descTitulo = new Label("Descripción:");
         descTitulo.setStyle("-fx-font-weight:bold;");
+        descTitulo.getStyleClass().add("section-label");
 
         Label descripcion = new Label(valor(boletin.getDescripcion()));
         descripcion.setWrapText(true);
 
         Label historialTitulo = new Label("Historial:");
         historialTitulo.setStyle("-fx-font-weight:bold;");
+        historialTitulo.getStyleClass().add("section-label");
 
         Label historial = new Label(valor(boletin.getHistorial()));
         historial.setWrapText(true);
@@ -149,7 +176,7 @@ public class DetalleCasoAdminController {
 
         if (boletines.isEmpty()) {
             Label vacio = new Label("No hay boletines internos.");
-            vacio.setStyle("-fx-text-fill:#777;");
+            vacio.getStyleClass().add("empty-state");
             contenedorBoletines.getChildren().add(vacio);
             return;
         }
@@ -159,6 +186,7 @@ public class DetalleCasoAdminController {
         for (BoletinAdmin boletin : boletines) {
             Button boton = new Button("📄 Boletín interno N° " + numero + " - " + valor(boletin.getTitulo()));
             boton.setMaxWidth(Double.MAX_VALUE);
+            boton.getStyleClass().add("document-button");
 
             boton.setOnAction(e -> mostrarVistaPreviaBoletin(boletin));
             boton.setOnMouseClicked(e -> {

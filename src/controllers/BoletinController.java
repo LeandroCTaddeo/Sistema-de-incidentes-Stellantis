@@ -16,11 +16,17 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import models.Incidente;
 import services.IncidenteService;
+import services.VisorImagenService;
 import models.Prioridad;
 import dao.UsuarioDAO;
 import models.Usuario;
+import models.Imagen;
 import dao.ImagenDAO;
 import javafx.scene.control.DatePicker;
+import javafx.scene.Node;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.application.Platform;
 
 public class BoletinController {
 
@@ -70,6 +76,48 @@ public class BoletinController {
 
 		btnEnviar.setOnAction(event -> enviarIncidente());
 		btnAdjuntar.setOnAction(event -> seleccionarImagenes());
+		configurarNavegacionTeclado();
+		Platform.runLater(() -> dpFechaRegistro.requestFocus());
+	}
+
+	private void configurarNavegacionTeclado() {
+		List<Node> orden = List.of(
+				dpFechaRegistro,
+				dpFechaEmision,
+				txtLugar,
+				txtTitulo,
+				txtDescripcion,
+				txtNombreApellido,
+				txtCargo,
+				txtMatricula,
+				txtDni,
+				txtArea,
+				txtSuperiorInmediato,
+				txtHistorial,
+				cmbPrioridad,
+				btnEnviar
+		);
+
+		for (int i = 0; i < orden.size() - 1; i++) {
+			Node actual = orden.get(i);
+			Node siguiente = orden.get(i + 1);
+
+			if (actual instanceof TextArea) {
+				actual.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+					if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
+						event.consume();
+						siguiente.requestFocus();
+					}
+				});
+			} else {
+				actual.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
+					if (event.getCode() == KeyCode.ENTER) {
+						event.consume();
+						siguiente.requestFocus();
+					}
+				});
+			}
+		}
 	}
 
 	private void seleccionarImagenes() {
@@ -203,8 +251,6 @@ public class BoletinController {
 	    btnEnviar.setVisible(false);
 	    btnAdjuntar.setVisible(false);
 
-	    contenedorImagenes.setDisable(true);
-
 	}
 
 	private void mostrarError(String mensaje) {
@@ -229,6 +275,7 @@ public class BoletinController {
 	    txtArea.setText(valor(incidente.getArea()));
 	    txtSuperiorInmediato.setText(valor(incidente.getSuperiorInmediato()));
 	    txtHistorial.setText(valor(incidente.getHistorial()));
+	    cargarImagenesLectura(incidente.getId());
 
 	    cmbPrioridad.setValue(
 	            incidente.getPrioridad().name().substring(0,1)
@@ -241,6 +288,16 @@ public class BoletinController {
 
 	    btnEnviar.setVisible(false);
 	    btnAdjuntar.setVisible(false);
+	}
+
+	private void cargarImagenesLectura(int incidenteId) {
+		List<Imagen> imagenes = imagenDAO.obtenerPorIncidente(incidenteId);
+		contenedorImagenes.getChildren().clear();
+
+		for (Imagen adjunto : imagenes) {
+			ImageView miniatura = VisorImagenService.crearMiniatura(adjunto, imagenes, 120, 90);
+			if (miniatura != null) contenedorImagenes.getChildren().add(miniatura);
+		}
 	}
 
 	private String valor(String texto) {

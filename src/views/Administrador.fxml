@@ -6,35 +6,33 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="controllers.AdministradorController">
+            fx:controller="controllers.AdministradorController"
+            stylesheets="@../resources/css/admin.css"
+            styleClass="admin-root">
 
     <left>
 
-        <VBox prefWidth="200"
-              spacing="10"
-              style="-fx-background-color:#1F2937; -fx-padding:20;">
+        <VBox prefWidth="220" styleClass="sidebar">
 
-            <Label text="STELLANTIS"
-                   style="-fx-text-fill:white;-fx-font-size:22;-fx-font-weight:bold;"/>
+            <Label text="STELLANTIS" styleClass="brand-title"/>
 
             <Separator/>
 
             <Button fx:id="btnBandeja" text="📥 Bandeja"
-                    maxWidth="999"/>
+                    maxWidth="999" styleClass="nav-button,nav-button-active"/>
 
             <Button fx:id="btnMisIncidentes" text="📁 Mis incidentes"
-                    maxWidth="999"/>
+                    maxWidth="999" styleClass="nav-button"/>
 
             <Button fx:id="btnReportes" text="📊 Reportes"
-                    maxWidth="999"/>
+                    maxWidth="999" styleClass="nav-button"/>
 
             <Button text="👥 Usuarios"
-                    maxWidth="999"/>
+                    maxWidth="999" styleClass="nav-button"/>
 
             <Region VBox.vgrow="ALWAYS"/>
 
-            <Label text="Administrador"
-                   style="-fx-text-fill:white;"/>
+            <Label text="Administrador" styleClass="sidebar-user"/>
 
         </VBox>
 
@@ -46,15 +44,15 @@
 
             <top>
 
-                <HBox spacing="10"
-                      style="-fx-background-color:#F5F5F5;-fx-padding:15;">
+                <HBox spacing="12" alignment="CENTER_LEFT" styleClass="topbar">
 
                     <Label fx:id="lblSeccion" text="Bandeja de Incidentes"
-                           style="-fx-font-size:24;-fx-font-weight:bold;"/>
+                           styleClass="page-title"/>
 
                     <Region HBox.hgrow="ALWAYS"/>
 
                     <HBox fx:id="filtrosFechas" spacing="6" alignment="CENTER_LEFT"
+                          styleClass="filter-row"
                           visible="false" managed="false">
                         <Label text="Desde:"/>
                         <DatePicker fx:id="dpDesde" prefWidth="140"/>
@@ -71,61 +69,64 @@
 
             <center>
 
-                <SplitPane dividerPositions="0.33">
+                <SplitPane dividerPositions="0.34" styleClass="main-split">
 
-                    <ScrollPane fitToWidth="true">
+                    <ScrollPane fitToWidth="true" styleClass="content-scroll">
 
                         <content>
 
                             <VBox fx:id="listaIncidentes"
-                                  spacing="8"
-                                  style="-fx-padding:10;"/>
+                                  styleClass="incident-list"/>
 
                         </content>
 
                     </ScrollPane>
 
-                    <VBox spacing="12"
-                          style="-fx-padding:20;">
+                    <VBox styleClass="detail-panel">
 
                         <Label fx:id="lblTitulo"
                                text="Seleccione un incidente"
-                               style="-fx-font-size:26;-fx-font-weight:bold;"/>
+                               styleClass="detail-title"/>
 
-                        <GridPane hgap="10" vgap="10">
+                        <GridPane styleClass="detail-grid">
 
-                            <Label text="Empleado"/>
-                            <Label fx:id="lblEmpleado" GridPane.columnIndex="1"/>
+                            <Label text="Empleado" styleClass="field-label"/>
+                            <Label fx:id="lblEmpleado" styleClass="field-value" GridPane.columnIndex="1"/>
 
-                            <Label text="Sector" GridPane.rowIndex="1"/>
+                            <Label text="Sector" styleClass="field-label" GridPane.rowIndex="1"/>
                             <Label fx:id="lblSector"
+                                   styleClass="field-value"
                                    GridPane.columnIndex="1"
                                    GridPane.rowIndex="1"/>
 
                             <Label text="Prioridad"
+                                   styleClass="field-label"
                                    GridPane.rowIndex="2"/>
 
                             <Label fx:id="lblPrioridad"
+                                   styleClass="field-value"
                                    GridPane.columnIndex="1"
                                    GridPane.rowIndex="2"/>
 
                             <Label text="Estado"
+                                   styleClass="field-label"
                                    GridPane.rowIndex="3"/>
 
                             <Label fx:id="lblEstado"
+                                   styleClass="field-value"
                                    GridPane.columnIndex="1"
                                    GridPane.rowIndex="3"/>
 
                         </GridPane>
 
-                        <Label text="Descripción"/>
+                        <Label text="Descripción" styleClass="section-label"/>
 
                         <TextArea fx:id="txtDescripcion"
                                   editable="false"
                                   wrapText="true"
                                   prefHeight="280"/>
 
-                        <Label text="Imágenes"/>
+                        <Label text="Imágenes" styleClass="section-label"/>
 
                         <FlowPane fx:id="contenedorImagenes"
                                   hgap="10"
@@ -137,10 +138,10 @@
                             <Region HBox.hgrow="ALWAYS"/>
 
                             <Button fx:id="btnResolver"
-                                    text="Resolver"/>
+                                    text="Resolver" styleClass="button-success"/>
 
                             <Button fx:id="btnExportar"
-                                    text="Exportar PDF"/>
+                                    text="Exportar PDF" styleClass="button-secondary"/>
 
                         </HBox>
 

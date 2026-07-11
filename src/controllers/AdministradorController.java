@@ -19,6 +19,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import models.Imagen;
 import models.Incidente;
+import services.VisorImagenService;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -47,6 +48,7 @@ public class AdministradorController {
 
     private Incidente incidenteSeleccionado;
     private boolean modoHistorico;
+    private VBox tarjetaSeleccionada;
 
     private IncidenteDAO dao = new IncidenteDAO();
     private ImagenDAO imagenDAO = new ImagenDAO();
@@ -82,7 +84,7 @@ public class AdministradorController {
             Label vacio = new Label(modoHistorico
                     ? "No se encontraron incidentes resueltos."
                     : "No hay incidentes pendientes.");
-            vacio.setStyle("-fx-text-fill:#777; -fx-padding:15;");
+            vacio.getStyleClass().add("empty-state");
             listaIncidentes.getChildren().add(vacio);
             return;
         }
@@ -91,40 +93,37 @@ public class AdministradorController {
 
             VBox tarjeta = new VBox(6);
             tarjeta.setPrefWidth(320);
-
-            tarjeta.setStyle("""
-                    -fx-background-color:white;
-                    -fx-background-radius:10;
-                    -fx-border-radius:10;
-                    -fx-border-color:#D6D6D6;
-                    -fx-padding:12;
-                    """);
+            tarjeta.getStyleClass().add("incident-card");
 
             Label titulo = new Label("📄 " + incidente.getTitulo());
-            titulo.setStyle("-fx-font-size:16px; -fx-font-weight:bold;");
+            titulo.getStyleClass().add("card-title");
 
             Label empleado = new Label("👤 " + incidente.getNombreEmpleado());
+            empleado.getStyleClass().add("card-meta");
             String textoFecha = incidente.getFecha().replace("T", " ");
             if (modoHistorico && incidente.getFechaResolucion() != null) {
                 textoFecha = "Resuelto: " + incidente.getFechaResolucion()
                         .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
             }
             Label fecha = new Label("🕒 " + textoFecha);
+            fecha.getStyleClass().add("card-meta");
             Label prioridad = new Label("Prioridad: " + incidente.getPrioridad());
+            prioridad.getStyleClass().add("card-meta");
 
             Label estado = new Label();
 
             if (incidente.getEstado().equals("PENDIENTE")) {
                 estado.setText("🔴 PENDIENTE");
-                estado.setStyle("-fx-text-fill:#D32F2F; -fx-font-weight:bold;");
+                estado.getStyleClass().add("status-pending");
             } else {
                 estado.setText("🟢 RESUELTO");
-                estado.setStyle("-fx-text-fill:#2E7D32; -fx-font-weight:bold;");
+                estado.getStyleClass().add("status-resolved");
             }
 
             tarjeta.getChildren().addAll(titulo, empleado, fecha, prioridad, estado);
 
             tarjeta.setOnMouseClicked(event -> {
+                seleccionarTarjeta(tarjeta);
                 if (event.getClickCount() == 2) {
                     abrirDetalleCaso(incidente);
                 } else {
@@ -138,6 +137,7 @@ public class AdministradorController {
 
     private void mostrarBandeja() {
         modoHistorico = false;
+        activarNavegacion(btnBandeja);
         lblSeccion.setText("Bandeja de Incidentes");
         filtrosFechas.setVisible(false);
         filtrosFechas.setManaged(false);
@@ -153,6 +153,7 @@ public class AdministradorController {
 
     private void mostrarMisIncidentes() {
         modoHistorico = true;
+        activarNavegacion(btnMisIncidentes);
         lblSeccion.setText("Mis incidentes resueltos");
         filtrosFechas.setVisible(true);
         filtrosFechas.setManaged(true);
@@ -179,6 +180,22 @@ public class AdministradorController {
         }
     }
 
+    private void activarNavegacion(Button activo) {
+        btnBandeja.getStyleClass().remove("nav-button-active");
+        btnMisIncidentes.getStyleClass().remove("nav-button-active");
+        activo.getStyleClass().add("nav-button-active");
+    }
+
+    private void seleccionarTarjeta(VBox tarjeta) {
+        if (tarjetaSeleccionada != null) {
+            tarjetaSeleccionada.getStyleClass().remove("incident-card-selected");
+        }
+        tarjetaSeleccionada = tarjeta;
+        if (!tarjetaSeleccionada.getStyleClass().contains("incident-card-selected")) {
+            tarjetaSeleccionada.getStyleClass().add("incident-card-selected");
+        }
+    }
+
     private void cargarDetalle(Incidente incidente) {
 
         incidenteSeleccionado = incidente;
@@ -192,15 +209,10 @@ public class AdministradorController {
 
         contenedorImagenes.getChildren().clear();
 
-        for (Imagen img : imagenDAO.obtenerPorIncidente(incidente.getId())) {
-
-            File archivo = new File(img.getRuta());
-
-            if (archivo.exists()) {
-                Image imagen = new Image(archivo.toURI().toString(), 120, 120, true, true);
-                ImageView vista = new ImageView(imagen);
-                contenedorImagenes.getChildren().add(vista);
-            }
+        var imagenes = imagenDAO.obtenerPorIncidente(incidente.getId());
+        for (Imagen img : imagenes) {
+            ImageView vista = VisorImagenService.crearMiniatura(img, imagenes, 120, 90);
+            if (vista != null) contenedorImagenes.getChildren().add(vista);
         }
     }
     
@@ -229,6 +241,7 @@ public class AdministradorController {
         }
     }
     private void limpiarDetalle() {
+        tarjetaSeleccionada = null;
         lblTitulo.setText("Seleccione un incidente");
         lblEmpleado.setText("");
         lblSector.setText("");
