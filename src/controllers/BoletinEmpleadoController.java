@@ -68,10 +68,16 @@ public class BoletinEmpleadoController {
 
         txtTitulo.setText(incidente.getTitulo());
         txtDescripcion.setText(incidente.getDescripcion());
-
-        txtNombreApellido.setText(incidente.getNombreEmpleado());
-
-        txtArea.setText(incidente.getSector());
+        dpFechaRegistro.setValue(incidente.getFechaRegistro());
+        dpFechaEmision.setValue(incidente.getFechaEmision());
+        txtLugar.setText(valor(incidente.getLugar()));
+        txtNombreApellido.setText(valor(incidente.getNombreApellido()));
+        txtCargo.setText(valor(incidente.getCargo()));
+        txtMatricula.setText(valor(incidente.getMatricula()));
+        txtDni.setText(valor(incidente.getDni()));
+        txtArea.setText(valor(incidente.getArea()));
+        txtSuperiorInmediato.setText(valor(incidente.getSuperiorInmediato()));
+        txtHistorial.setText(valor(incidente.getHistorial()));
 
         cmbPrioridad.getItems().clear();
 
@@ -101,6 +107,10 @@ public class BoletinEmpleadoController {
 
         }
 
+    }
+
+    private String valor(String texto) {
+        return texto == null ? "" : texto;
     }
 
 }

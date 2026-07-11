@@ -28,16 +28,21 @@ public class FormularioPDFRenderer {
         PdfContentByte cb = writer.getDirectContent();
         Font texto = FontFactory.getFont(FontFactory.HELVETICA, 9);
 
-        escribirCampo(cb, 160, 708, 280, 724, formatearFecha(i.getFecha()), texto);
-        escribirCampo(cb, 440, 708, 560, 724, formatearFecha(i.getFecha()), texto);
+        escribirCampo(cb, 160, 708, 280, 724, valor(i.getFechaRegistro()), texto);
+        escribirCampo(cb, 440, 708, 560, 724, valor(i.getFechaEmision()), texto);
 
-        escribirCampo(cb, 105, 668, 540, 684, valor(i.getSector()), texto);
+        escribirCampo(cb, 105, 668, 540, 684, valor(i.getLugar()), texto);
         escribirCampo(cb, 105, 625, 300, 641, valor(i.getTitulo()), texto);
         escribirCampo(cb, 430, 585, 545, 640, valor(i.getDescripcion()), texto);
 
-        escribirCampo(cb, 160, 512, 300, 528, valor(i.getNombreEmpleado()), texto);
+        escribirCampo(cb, 160, 512, 300, 528, valor(i.getNombreApellido()), texto);
+        escribirCampo(cb, 395, 512, 540, 528, valor(i.getCargo()), texto);
+        escribirCampo(cb, 160, 477, 300, 493, valor(i.getMatricula()), texto);
+        escribirCampo(cb, 395, 477, 540, 493, valor(i.getDni()), texto);
 
-        escribirCampo(cb, 105, 405, 300, 421, valor(i.getSector()), texto);
+        escribirCampo(cb, 105, 405, 300, 421, valor(i.getArea()), texto);
+        escribirCampo(cb, 430, 405, 540, 421, valor(i.getSuperiorInmediato()), texto);
+        escribirCampo(cb, 40, 215, 550, 350, valor(i.getHistorial()), texto);
 
         escribirCampo(cb, 500, 40, 560, 55, "Prioridad: " + valor(String.valueOf(i.getPrioridad())), texto);
     }

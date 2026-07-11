@@ -126,7 +126,17 @@ public class BoletinController {
 				titulo,
 				descripcion,
 				Prioridad.valueOf(cmbPrioridad.getValue().toUpperCase()),
-				usuarioActual.getId()
+				usuarioActual.getId(),
+				dpFechaRegistro.getValue(),
+				dpFechaEmision.getValue(),
+				txtLugar.getText().trim(),
+				txtNombreApellido.getText().trim(),
+				txtCargo.getText().trim(),
+				txtMatricula.getText().trim(),
+				txtDni.getText().trim(),
+				txtArea.getText().trim(),
+				txtSuperiorInmediato.getText().trim(),
+				txtHistorial.getText().trim()
 				);
 
 		int idIncidente = incidenteService.guardar(incidente);
@@ -174,9 +184,19 @@ public class BoletinController {
 	}
 	
 	public void modoLectura() {
+		dpFechaRegistro.setDisable(true);
+		dpFechaEmision.setDisable(true);
+		txtLugar.setEditable(false);
 
 	    txtTitulo.setEditable(false);
 	    txtDescripcion.setEditable(false);
+	    txtNombreApellido.setEditable(false);
+	    txtCargo.setEditable(false);
+	    txtMatricula.setEditable(false);
+	    txtDni.setEditable(false);
+	    txtArea.setEditable(false);
+	    txtSuperiorInmediato.setEditable(false);
+	    txtHistorial.setEditable(false);
 
 	    cmbPrioridad.setDisable(true);
 
@@ -199,6 +219,16 @@ public class BoletinController {
 
 	    txtTitulo.setText(incidente.getTitulo());
 	    txtDescripcion.setText(incidente.getDescripcion());
+	    dpFechaRegistro.setValue(incidente.getFechaRegistro());
+	    dpFechaEmision.setValue(incidente.getFechaEmision());
+	    txtLugar.setText(valor(incidente.getLugar()));
+	    txtNombreApellido.setText(valor(incidente.getNombreApellido()));
+	    txtCargo.setText(valor(incidente.getCargo()));
+	    txtMatricula.setText(valor(incidente.getMatricula()));
+	    txtDni.setText(valor(incidente.getDni()));
+	    txtArea.setText(valor(incidente.getArea()));
+	    txtSuperiorInmediato.setText(valor(incidente.getSuperiorInmediato()));
+	    txtHistorial.setText(valor(incidente.getHistorial()));
 
 	    cmbPrioridad.setValue(
 	            incidente.getPrioridad().name().substring(0,1)
@@ -211,6 +241,10 @@ public class BoletinController {
 
 	    btnEnviar.setVisible(false);
 	    btnAdjuntar.setVisible(false);
+	}
+
+	private String valor(String texto) {
+		return texto == null ? "" : texto;
 	}
 	
 }
