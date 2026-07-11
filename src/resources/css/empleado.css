@@ -1,0 +1,73 @@
+.root-scroll {
+    -fx-background-color: #f2f4f7;
+}
+
+.main-container {
+    -fx-padding: 25;
+    -fx-background-color: white;
+}
+
+.header-box {
+    -fx-border-color: black;
+    -fx-border-width: 1;
+}
+
+.header-logo-box {
+    -fx-border-color: black;
+    -fx-border-width: 0 1 0 0;
+}
+
+.header-title {
+    -fx-font-size: 30px;
+    -fx-text-fill: #4F8DD8;
+    -fx-font-weight: bold;
+}
+
+.header-code-box {
+    -fx-border-color: black;
+    -fx-border-width: 0 0 0 1;
+}
+
+.header-code-title {
+    -fx-background-color: #4F8DD8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.section-box {
+    -fx-border-color: black;
+    -fx-border-width: 1;
+}
+
+.section-title {
+    -fx-background-color: #4F8DD8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 6;
+}
+
+.form-grid {
+    -fx-padding: 10;
+    -fx-hgap: 12;
+    -fx-vgap: 10;
+}
+
+.historial-area {
+    -fx-padding: 8;
+}
+
+.images-box {
+    -fx-padding: 10;
+}
+
+.btn-primary {
+    -fx-background-color: #4F8DD8;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18;
+    -fx-background-radius: 4;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #3A78C2;
+}

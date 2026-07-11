@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefWidth="300" prefHeight="80"
+xmlns="http://javafx.com/javafx/21"
+xmlns:fx="http://javafx.com/fxml">
+
+    <children>
+
+        <Label fx:id="lblTitulo"
+               layoutX="10"
+               layoutY="10"
+               style="-fx-font-size:15px;-fx-font-weight:bold;"/>
+
+        <Label fx:id="lblFecha"
+               layoutX="10"
+               layoutY="35"/>
+
+        <Label fx:id="lblEstado"
+               layoutX="220"
+               layoutY="10"/>
+
+        <Separator layoutY="79" prefWidth="300"/>
+
+    </children>
+
+</AnchorPane>

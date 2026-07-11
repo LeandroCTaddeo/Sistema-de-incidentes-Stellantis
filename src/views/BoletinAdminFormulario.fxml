@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.BoletinAdminFormularioController"
+            fitToWidth="true"
+            style="-fx-background-color:#f2f4f7;">
+
+    <content>
+        <VBox spacing="14" style="-fx-padding:25; -fx-background-color:white;">
+
+            <Label text="Boletín interno de investigación"
+                   style="-fx-font-size:26px; -fx-font-weight:bold; -fx-text-fill:#4F8DD8;"/>
+
+            <GridPane hgap="12" vgap="10" style="-fx-border-color:black; -fx-padding:10;">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="15"/>
+                    <ColumnConstraints percentWidth="35"/>
+                    <ColumnConstraints percentWidth="15"/>
+                    <ColumnConstraints percentWidth="35"/>
+                </columnConstraints>
+
+                <Label text="Fecha Registro:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <DatePicker fx:id="dpFechaRegistro" maxWidth="9999" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Fecha Emisión:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                <DatePicker fx:id="dpFechaEmision" maxWidth="9999" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                <Label text="Lugar:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtLugar" maxWidth="9999" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Título:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <TextField fx:id="txtTitulo" maxWidth="9999" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Descripción:" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                <TextArea fx:id="txtDescripcion" prefHeight="90" wrapText="true" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+            </GridPane>
+
+            <VBox style="-fx-border-color:black;">
+                <Label text="INVOLUCRADOS:"
+                       maxWidth="Infinity"
+                       style="-fx-background-color:#4F8DD8; -fx-text-fill:white; -fx-font-weight:bold; -fx-padding:6;"/>
+
+                <GridPane hgap="12" vgap="8" style="-fx-padding:10;">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="15"/>
+                        <ColumnConstraints percentWidth="35"/>
+                        <ColumnConstraints percentWidth="15"/>
+                        <ColumnConstraints percentWidth="35"/>
+                    </columnConstraints>
+
+                    <Label text="Nombre y Apellido:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtNombreApellido" maxWidth="9999" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <Label text="Cargo:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <TextField fx:id="txtCargo" maxWidth="9999" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                    <Label text="Matrícula:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtMatricula" maxWidth="9999" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                    <Label text="DNI:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                    <TextField fx:id="txtDni" maxWidth="9999" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+                </GridPane>
+            </VBox>
+
+            <VBox style="-fx-border-color:black;">
+                <Label text="SECTOR:"
+                       maxWidth="Infinity"
+                       style="-fx-background-color:#4F8DD8; -fx-text-fill:white; -fx-font-weight:bold; -fx-padding:6;"/>
+
+                <GridPane hgap="12" vgap="8" style="-fx-padding:10;">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="15"/>
+                        <ColumnConstraints percentWidth="35"/>
+                        <ColumnConstraints percentWidth="15"/>
+                        <ColumnConstraints percentWidth="35"/>
+                    </columnConstraints>
+
+                    <Label text="Área:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtArea" maxWidth="9999" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <Label text="Superior inmediato:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                    <TextField fx:id="txtSuperiorInmediato" maxWidth="9999" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                </GridPane>
+            </VBox>
+
+            <VBox style="-fx-border-color:black;">
+                <Label text="HISTORIAL:"
+                       maxWidth="Infinity"
+                       style="-fx-background-color:#4F8DD8; -fx-text-fill:white; -fx-font-weight:bold; -fx-padding:6;"/>
+
+                <TextArea fx:id="txtHistorial" prefHeight="170" wrapText="true"/>
+            </VBox>
+
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Label text="Prioridad:"/>
+                <ComboBox fx:id="cmbPrioridad" prefWidth="160"/>
+
+                <Button fx:id="btnCancelar" text="Cancelar"/>
+                <Button fx:id="btnGuardar"
+                        text="Guardar boletín"
+                        style="-fx-background-color:#4F8DD8; -fx-text-fill:white; -fx-font-weight:bold; -fx-padding:8 18;"/>
+            </HBox>
+
+        </VBox>
+    </content>
+</ScrollPane>

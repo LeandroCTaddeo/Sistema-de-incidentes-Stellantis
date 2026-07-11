@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.AdministradorController">
+
+    <left>
+
+        <VBox prefWidth="200"
+              spacing="10"
+              style="-fx-background-color:#1F2937; -fx-padding:20;">
+
+            <Label text="STELLANTIS"
+                   style="-fx-text-fill:white;-fx-font-size:22;-fx-font-weight:bold;"/>
+
+            <Separator/>
+
+            <Button text="📥 Bandeja"
+                    maxWidth="999"/>
+
+            <Button text="📁 Mis incidentes"
+                    maxWidth="999"/>
+
+            <Button text="📊 Reportes"
+                    maxWidth="999"/>
+
+            <Button text="👥 Usuarios"
+                    maxWidth="999"/>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <Label text="Administrador"
+                   style="-fx-text-fill:white;"/>
+
+        </VBox>
+
+    </left>
+
+    <center>
+
+        <BorderPane>
+
+            <top>
+
+                <HBox spacing="10"
+                      style="-fx-background-color:#F5F5F5;-fx-padding:15;">
+
+                    <Label text="Bandeja de Incidentes"
+                           style="-fx-font-size:24;-fx-font-weight:bold;"/>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <TextField promptText="Buscar..."
+                               prefWidth="250"/>
+
+                </HBox>
+
+            </top>
+
+            <center>
+
+                <SplitPane dividerPositions="0.33">
+
+                    <ScrollPane fitToWidth="true">
+
+                        <content>
+
+                            <VBox fx:id="listaIncidentes"
+                                  spacing="8"
+                                  style="-fx-padding:10;"/>
+
+                        </content>
+
+                    </ScrollPane>
+
+                    <VBox spacing="12"
+                          style="-fx-padding:20;">
+
+                        <Label fx:id="lblTitulo"
+                               text="Seleccione un incidente"
+                               style="-fx-font-size:26;-fx-font-weight:bold;"/>
+
+                        <GridPane hgap="10" vgap="10">
+
+                            <Label text="Empleado"/>
+                            <Label fx:id="lblEmpleado" GridPane.columnIndex="1"/>
+
+                            <Label text="Sector" GridPane.rowIndex="1"/>
+                            <Label fx:id="lblSector"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="1"/>
+
+                            <Label text="Prioridad"
+                                   GridPane.rowIndex="2"/>
+
+                            <Label fx:id="lblPrioridad"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="2"/>
+
+                            <Label text="Estado"
+                                   GridPane.rowIndex="3"/>
+
+                            <Label fx:id="lblEstado"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="3"/>
+
+                        </GridPane>
+
+                        <Label text="Descripción"/>
+
+                        <TextArea fx:id="txtDescripcion"
+                                  editable="false"
+                                  wrapText="true"
+                                  prefHeight="280"/>
+
+                        <Label text="Imágenes"/>
+
+                        <FlowPane fx:id="contenedorImagenes"
+                                  hgap="10"
+                                  vgap="10"
+                                  prefHeight="120"/>
+
+                        <HBox spacing="10">
+
+                            <Region HBox.hgrow="ALWAYS"/>
+
+                            <Button fx:id="btnResolver"
+                                    text="Resolver"/>
+
+                            <Button fx:id="btnExportar"
+                                    text="Exportar PDF"/>
+
+                        </HBox>
+
+                    </VBox>
+
+                </SplitPane>
+
+            </center>
+
+        </BorderPane>
+
+    </center>
+
+</BorderPane>

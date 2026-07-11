@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefWidth="700" prefHeight="600"
+xmlns="http://javafx.com/javafx/21"
+xmlns:fx="http://javafx.com/fxml"
+fx:controller="controllers.DetalleIncidenteController">
+
+    <children>
+
+        <Label fx:id="lblTitulo"
+               layoutX="20"
+               layoutY="20"
+               style="-fx-font-size:22px;-fx-font-weight:bold;"/>
+
+        <Label text="Descripción"
+               layoutX="20"
+               layoutY="70"/>
+
+        <TextArea fx:id="txtDescripcion"
+                  layoutX="20"
+                  layoutY="90"
+                  prefWidth="650"
+                  prefHeight="220"
+                  editable="false"/>
+
+        <Label text="Prioridad"
+               layoutX="20"
+               layoutY="330"/>
+
+        <Label fx:id="lblPrioridad"
+               layoutX="120"
+               layoutY="330"/>
+
+        <Label text="Estado"
+               layoutX="20"
+               layoutY="360"/>
+
+        <Label fx:id="lblEstado"
+               layoutX="120"
+               layoutY="360"/>
+
+        <Button fx:id="btnResolver"
+                layoutX="520"
+                layoutY="520"
+                text="Resolver incidente"/>
+
+    </children>
+
+</AnchorPane>

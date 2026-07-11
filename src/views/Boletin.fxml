@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21"
+	xmlns:fx="http://javafx.com/fxml"
+	fx:controller="controllers.BoletinController" fitToWidth="true"
+	fitToHeight="true" stylesheets="@../resources/css/empleado.css"
+	styleClass="root-scroll">
+
+	<content>
+		<VBox spacing="14" fillWidth="true" styleClass="main-container">
+
+			<HBox styleClass="header-box">
+
+				<VBox prefWidth="260" minWidth="260" prefHeight="90"
+					alignment="CENTER" styleClass="header-logo-box">
+
+					<ImageView fitHeight="75" fitWidth="210"
+						preserveRatio="true" smooth="true">
+						<image>
+							<Image url="@../resources/images/stellantis.jpg" />
+						</image>
+					</ImageView>
+
+				</VBox>
+
+				<StackPane HBox.hgrow="ALWAYS" minWidth="500">
+					<Label text="BOLETÍN DE OCURRENCIA" alignment="CENTER"
+						styleClass="header-title" />
+				</StackPane>
+
+				<VBox prefWidth="260" minWidth="260"
+					styleClass="header-code-box">
+
+					<Label text="CÓDIGO" prefHeight="40" maxWidth="Infinity"
+						alignment="CENTER" styleClass="header-code-title" />
+
+					<Label text="R-RRHH-SP-004" prefHeight="50"
+						maxWidth="Infinity" alignment="CENTER" />
+
+				</VBox>
+
+			</HBox>
+
+			<GridPane styleClass="form-grid section-box" vgap="14">
+				<columnConstraints>
+					<ColumnConstraints percentWidth="12" />
+					<ColumnConstraints percentWidth="38" />
+					<ColumnConstraints percentWidth="16" />
+					<ColumnConstraints percentWidth="34" />
+				</columnConstraints>
+
+				<Label text="Fecha/Hora Registro:" GridPane.rowIndex="0"
+					GridPane.columnIndex="0" />
+				<DatePicker fx:id="dpFechaRegistro" maxWidth="9999"
+					GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+				<Label text="Fecha/Hora Emisión:" GridPane.rowIndex="0"
+					GridPane.columnIndex="2">
+					<GridPane.margin>
+						<javafx.geometry.Insets left="15" />
+					</GridPane.margin>
+				</Label>
+				<DatePicker fx:id="dpFechaEmision" maxWidth="9999"
+					GridPane.rowIndex="0" GridPane.columnIndex="3" />
+
+				<Label text="Lugar:" GridPane.rowIndex="1"
+					GridPane.columnIndex="0" />
+
+				<TextField fx:id="txtLugar" maxWidth="9999"
+					GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+				<Label text="Título:" GridPane.rowIndex="2"
+					GridPane.columnIndex="0" />
+					
+				<TextField fx:id="txtTitulo" maxWidth="9999"
+					GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+				<Label text="Descripción:" GridPane.rowIndex="2"
+					GridPane.columnIndex="2">
+					<GridPane.margin>
+						<javafx.geometry.Insets left="15" />
+					</GridPane.margin>
+				</Label>
+				<TextArea fx:id="txtDescripcion" prefHeight="90"
+					wrapText="true" GridPane.rowIndex="2" GridPane.columnIndex="3" />
+			</GridPane>
+
+
+			<VBox styleClass="section-box">
+				<Label text="INVOLUCRADOS:" maxWidth="Infinity"
+					styleClass="section-title" />
+
+				<GridPane styleClass="form-grid">
+					<columnConstraints>
+						<ColumnConstraints percentWidth="15" />
+						<ColumnConstraints percentWidth="35" />
+						<ColumnConstraints percentWidth="15" />
+						<ColumnConstraints percentWidth="35" />
+					</columnConstraints>
+
+					<Label text="Nombre y Apellido:" GridPane.rowIndex="0"
+						GridPane.columnIndex="0" />
+					<TextField fx:id="txtNombreApellido" maxWidth="9999"
+						GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+					<Label text="Cargo:" GridPane.rowIndex="0"
+						GridPane.columnIndex="2" />
+					<TextField fx:id="txtCargo" GridPane.rowIndex="0"
+						maxWidth="9999" GridPane.columnIndex="3" />
+
+					<Label text="Matrícula:" GridPane.rowIndex="1"
+						GridPane.columnIndex="0" />
+					<TextField fx:id="txtMatricula" GridPane.rowIndex="1"
+						maxWidth="9999" GridPane.columnIndex="1" />
+
+					<Label text="DNI:" GridPane.rowIndex="1"
+						GridPane.columnIndex="2" />
+					<TextField fx:id="txtDni" GridPane.rowIndex="1"
+						maxWidth="9999" GridPane.columnIndex="3" />
+				</GridPane>
+			</VBox>
+
+			<VBox styleClass="section-box">
+				<Label text="SECTOR:" maxWidth="Infinity"
+					styleClass="section-title" />
+
+				<GridPane styleClass="form-grid">
+					<columnConstraints>
+						<ColumnConstraints percentWidth="15" />
+						<ColumnConstraints percentWidth="35" />
+						<ColumnConstraints percentWidth="15" />
+						<ColumnConstraints percentWidth="35" />
+					</columnConstraints>
+
+					<Label text="Área:" GridPane.rowIndex="0"
+						GridPane.columnIndex="0" />
+					<TextField fx:id="txtArea" GridPane.rowIndex="0"
+						maxWidth="9999" GridPane.columnIndex="1" />
+
+					<Label text="Superior inmediato:" GridPane.rowIndex="0"
+						GridPane.columnIndex="2" />
+					<TextField fx:id="txtSuperiorInmediato" maxWidth="9999"
+						GridPane.rowIndex="0" GridPane.columnIndex="3" />
+				</GridPane>
+			</VBox>
+
+			<VBox styleClass="section-box">
+				<Label text="HISTORIAL:" maxWidth="Infinity"
+					styleClass="section-title" />
+
+				<TextArea fx:id="txtHistorial" prefHeight="170"
+					wrapText="true" styleClass="historial-area" />
+			</VBox>
+
+			<VBox styleClass="section-box">
+				<Label text="IMÁGENES ADJUNTAS:" maxWidth="Infinity"
+					styleClass="section-title" />
+
+				<HBox spacing="10" styleClass="images-box">
+					<Button fx:id="btnAdjuntar" text="Adjuntar imágenes" />
+					<FlowPane fx:id="contenedorImagenes" hgap="10" vgap="10" />
+				</HBox>
+			</VBox>
+
+			<HBox spacing="10" alignment="CENTER_RIGHT">
+				<Label text="Prioridad:" />
+				<ComboBox fx:id="cmbPrioridad" prefWidth="160" />
+				<Button fx:id="btnEnviar" text="Enviar boletín"
+					styleClass="btn-primary" />
+			</HBox>
+
+		</VBox>
+	</content>
+</ScrollPane>

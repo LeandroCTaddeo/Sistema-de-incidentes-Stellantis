@@ -1,0 +1,20 @@
+# Compilación de Java
+bin/
+*.class
+
+# Configuración local de Eclipse
+.settings/
+.classpath
+
+# Documentos generados
+Expediente_*.pdf
+*.log
+
+# Configuración y credenciales locales
+.env
+config-local.properties
+application-local.properties
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
