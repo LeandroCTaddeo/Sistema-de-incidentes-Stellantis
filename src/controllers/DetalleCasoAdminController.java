@@ -223,12 +223,14 @@ public class DetalleCasoAdminController {
 
     private void exportarPDF() {
         try {
-            pdfService.exportarExpediente(
+            boolean exportado = pdfService.exportarExpediente(
                     incidenteActual,
                     btnExportar.getScene().getWindow()
             );
 
-            mostrarInfo("Expediente exportado correctamente.");
+            if (exportado) {
+                mostrarInfo("Expediente exportado correctamente.");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

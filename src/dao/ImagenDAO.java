@@ -49,6 +49,7 @@ public class ImagenDAO {
                 SELECT *
                 FROM imagenes
                 WHERE incidente_id=?
+                ORDER BY id ASC
                 """;
 
         try {

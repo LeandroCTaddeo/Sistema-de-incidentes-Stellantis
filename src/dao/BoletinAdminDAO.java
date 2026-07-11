@@ -109,7 +109,7 @@ public class BoletinAdminDAO {
             SELECT *
             FROM boletines_admin
             WHERE incidente_id = ?
-            ORDER BY fecha_creacion DESC
+            ORDER BY fecha_creacion ASC, id ASC
         """;
 
         try (Connection conn = Conexion.conectar();
