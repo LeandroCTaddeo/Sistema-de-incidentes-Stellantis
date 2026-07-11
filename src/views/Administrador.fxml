@@ -19,13 +19,13 @@
 
             <Separator/>
 
-            <Button text="📥 Bandeja"
+            <Button fx:id="btnBandeja" text="📥 Bandeja"
                     maxWidth="999"/>
 
-            <Button text="📁 Mis incidentes"
+            <Button fx:id="btnMisIncidentes" text="📁 Mis incidentes"
                     maxWidth="999"/>
 
-            <Button text="📊 Reportes"
+            <Button fx:id="btnReportes" text="📊 Reportes"
                     maxWidth="999"/>
 
             <Button text="👥 Usuarios"
@@ -49,12 +49,20 @@
                 <HBox spacing="10"
                       style="-fx-background-color:#F5F5F5;-fx-padding:15;">
 
-                    <Label text="Bandeja de Incidentes"
+                    <Label fx:id="lblSeccion" text="Bandeja de Incidentes"
                            style="-fx-font-size:24;-fx-font-weight:bold;"/>
 
                     <Region HBox.hgrow="ALWAYS"/>
 
-                    <TextField promptText="Buscar..."
+                    <HBox fx:id="filtrosFechas" spacing="6" alignment="CENTER_LEFT"
+                          visible="false" managed="false">
+                        <Label text="Desde:"/>
+                        <DatePicker fx:id="dpDesde" prefWidth="140"/>
+                        <Label text="Hasta:"/>
+                        <DatePicker fx:id="dpHasta" prefWidth="140"/>
+                    </HBox>
+
+                    <TextField fx:id="txtBuscar" promptText="Buscar..."
                                prefWidth="250"/>
 
                 </HBox>

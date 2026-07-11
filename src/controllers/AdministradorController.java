@@ -1,6 +1,8 @@
 package controllers;
 
 import java.io.File;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import dao.ImagenDAO;
 import dao.IncidenteDAO;
@@ -8,10 +10,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.DatePicker;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import models.Imagen;
 import models.Incidente;
 import javafx.fxml.FXMLLoader;
@@ -31,14 +36,29 @@ public class AdministradorController {
     @FXML private FlowPane contenedorImagenes;
     @FXML private Button btnResolver;
     @FXML private Button btnExportar;
+    @FXML private Button btnBandeja;
+    @FXML private Button btnMisIncidentes;
+    @FXML private Button btnReportes;
+    @FXML private Label lblSeccion;
+    @FXML private TextField txtBuscar;
+    @FXML private DatePicker dpDesde;
+    @FXML private DatePicker dpHasta;
+    @FXML private HBox filtrosFechas;
 
     private Incidente incidenteSeleccionado;
+    private boolean modoHistorico;
 
     private IncidenteDAO dao = new IncidenteDAO();
     private ImagenDAO imagenDAO = new ImagenDAO();
 
     @FXML
     public void initialize() {
+        btnBandeja.setOnAction(e -> mostrarBandeja());
+        btnMisIncidentes.setOnAction(e -> mostrarMisIncidentes());
+        btnReportes.setOnAction(e -> abrirReportes());
+        txtBuscar.textProperty().addListener((obs, anterior, actual) -> cargarLista());
+        dpDesde.valueProperty().addListener((obs, anterior, actual) -> cargarLista());
+        dpHasta.valueProperty().addListener((obs, anterior, actual) -> cargarLista());
         cargarLista();
     }
 
@@ -46,7 +66,28 @@ public class AdministradorController {
 
         listaIncidentes.getChildren().clear();
 
-        for (Incidente incidente : dao.obtenerPendientes()) {
+        List<Incidente> incidentes;
+        if (modoHistorico) {
+            if (dpDesde.getValue() != null && dpHasta.getValue() != null
+                    && dpDesde.getValue().isAfter(dpHasta.getValue())) {
+                mostrarError("La fecha desde no puede ser posterior a la fecha hasta.");
+                return;
+            }
+            incidentes = dao.buscarResueltos(txtBuscar.getText(), dpDesde.getValue(), dpHasta.getValue());
+        } else {
+            incidentes = dao.obtenerPendientes();
+        }
+
+        if (incidentes.isEmpty()) {
+            Label vacio = new Label(modoHistorico
+                    ? "No se encontraron incidentes resueltos."
+                    : "No hay incidentes pendientes.");
+            vacio.setStyle("-fx-text-fill:#777; -fx-padding:15;");
+            listaIncidentes.getChildren().add(vacio);
+            return;
+        }
+
+        for (Incidente incidente : incidentes) {
 
             VBox tarjeta = new VBox(6);
             tarjeta.setPrefWidth(320);
@@ -63,7 +104,12 @@ public class AdministradorController {
             titulo.setStyle("-fx-font-size:16px; -fx-font-weight:bold;");
 
             Label empleado = new Label("👤 " + incidente.getNombreEmpleado());
-            Label fecha = new Label("🕒 " + incidente.getFecha().replace("T", " "));
+            String textoFecha = incidente.getFecha().replace("T", " ");
+            if (modoHistorico && incidente.getFechaResolucion() != null) {
+                textoFecha = "Resuelto: " + incidente.getFechaResolucion()
+                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            }
+            Label fecha = new Label("🕒 " + textoFecha);
             Label prioridad = new Label("Prioridad: " + incidente.getPrioridad());
 
             Label estado = new Label();
@@ -87,6 +133,49 @@ public class AdministradorController {
             });
 
             listaIncidentes.getChildren().add(tarjeta);
+        }
+    }
+
+    private void mostrarBandeja() {
+        modoHistorico = false;
+        lblSeccion.setText("Bandeja de Incidentes");
+        filtrosFechas.setVisible(false);
+        filtrosFechas.setManaged(false);
+        txtBuscar.setPromptText("Buscar...");
+        txtBuscar.clear();
+        dpDesde.setValue(null);
+        dpHasta.setValue(null);
+        btnResolver.setVisible(true);
+        btnResolver.setManaged(true);
+        limpiarDetalle();
+        cargarLista();
+    }
+
+    private void mostrarMisIncidentes() {
+        modoHistorico = true;
+        lblSeccion.setText("Mis incidentes resueltos");
+        filtrosFechas.setVisible(true);
+        filtrosFechas.setManaged(true);
+        txtBuscar.setPromptText("N°, título, empleado, sector o área...");
+        btnResolver.setVisible(false);
+        btnResolver.setManaged(false);
+        limpiarDetalle();
+        cargarLista();
+    }
+
+    private void abrirReportes() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/Reportes.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Reportes de incidentes");
+            stage.setScene(new Scene(root, 1200, 750));
+            stage.setMaximized(true);
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarError("No se pudo abrir la sección de reportes.");
         }
     }
 
