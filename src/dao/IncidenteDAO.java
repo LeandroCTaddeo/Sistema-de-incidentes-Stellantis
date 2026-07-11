@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.sql.ResultSet;
 import java.sql.Date;
+import java.sql.Timestamp;
 import models.Prioridad;
 
 public class IncidenteDAO {
@@ -75,10 +76,22 @@ public class IncidenteDAO {
 		}
 
 	public List<Incidente> obtenerTodos() {
+		return obtenerPorEstado(null);
+	}
+
+	public List<Incidente> obtenerPendientes() {
+		return obtenerPorEstado("PENDIENTE");
+	}
+
+	public List<Incidente> obtenerResueltos() {
+		return obtenerPorEstado("RESUELTO");
+	}
+
+	private List<Incidente> obtenerPorEstado(String estado) {
 
 		List<Incidente> lista = new ArrayList<>();
 
-		String sql = """
+		String sqlBase = """
 				SELECT
 				i.*,
 				u.nombre,
@@ -86,14 +99,19 @@ public class IncidenteDAO {
 				FROM incidentes i
 				JOIN usuarios u
 				ON i.usuario_id = u.id
-				ORDER BY i.id DESC
 				""";
+		String sql = sqlBase
+				+ (estado == null ? "" : " WHERE i.estado = ? ")
+				+ " ORDER BY i.id DESC";
 
 		try {
 
 			Connection conexion = Conexion.conectar();
 
 			PreparedStatement ps = conexion.prepareStatement(sql);
+			if (estado != null) {
+				ps.setString(1, estado);
+			}
 
 			ResultSet rs = ps.executeQuery();
 
@@ -118,7 +136,9 @@ public class IncidenteDAO {
 						        rs.getString("dni"),
 						        rs.getString("area"),
 						        rs.getString("superior_inmediato"),
-						        rs.getString("historial")
+						        rs.getString("historial"),
+						        obtenerFechaHora(rs, "fecha_resolucion"),
+						        obtenerEntero(rs, "resuelto_por")
 						)
 						);
 
@@ -142,13 +162,25 @@ public class IncidenteDAO {
 		Date fecha = rs.getDate(columna);
 		return fecha == null ? null : fecha.toLocalDate();
 	}
+
+	private java.time.LocalDateTime obtenerFechaHora(ResultSet rs, String columna) throws Exception {
+		Timestamp fecha = rs.getTimestamp(columna);
+		return fecha == null ? null : fecha.toLocalDateTime();
+	}
+
+	private Integer obtenerEntero(ResultSet rs, String columna) throws Exception {
+		int valor = rs.getInt(columna);
+		return rs.wasNull() ? null : valor;
+	}
 	
-	public void resolver(int id) {
+	public boolean resolver(int id, int administradorId) {
 
 	    String sql = """
 	            UPDATE incidentes
-	            SET estado='RESUELTO'
-	            WHERE id=?
+	            SET estado='RESUELTO',
+	                fecha_resolucion=CURRENT_TIMESTAMP,
+	                resuelto_por=?
+	            WHERE id=? AND estado <> 'RESUELTO'
 	            """;
 
 	    try {
@@ -157,18 +189,22 @@ public class IncidenteDAO {
 
 	        PreparedStatement ps = conexion.prepareStatement(sql);
 
-	        ps.setInt(1, id);
+	        ps.setInt(1, administradorId);
+	        ps.setInt(2, id);
 
-	        ps.executeUpdate();
+	        int filas = ps.executeUpdate();
 
 	        ps.close();
 	        conexion.close();
+	        return filas == 1;
 
 	    } catch (Exception e) {
 
 	        e.printStackTrace();
 
 	    }
+
+	    return false;
 
 	}
 }

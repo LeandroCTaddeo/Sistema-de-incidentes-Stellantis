@@ -46,7 +46,7 @@ public class AdministradorController {
 
         listaIncidentes.getChildren().clear();
 
-        for (Incidente incidente : dao.obtenerTodos()) {
+        for (Incidente incidente : dao.obtenerPendientes()) {
 
             VBox tarjeta = new VBox(6);
             tarjeta.setPrefWidth(320);
@@ -122,6 +122,11 @@ public class AdministradorController {
 
             DetalleCasoAdminController controller = loader.getController();
             controller.cargarIncidente(incidente);
+            controller.setOnCasoResuelto(() -> {
+                incidenteSeleccionado = null;
+                cargarLista();
+                limpiarDetalle();
+            });
 
             Stage stage = new Stage();
             stage.setTitle("Caso - " + incidente.getTitulo());
@@ -133,6 +138,15 @@ public class AdministradorController {
             e.printStackTrace();
             mostrarError("No se pudo abrir el detalle del caso.");
         }
+    }
+    private void limpiarDetalle() {
+        lblTitulo.setText("Seleccione un incidente");
+        lblEmpleado.setText("");
+        lblSector.setText("");
+        lblPrioridad.setText("");
+        lblEstado.setText("");
+        txtDescripcion.clear();
+        contenedorImagenes.getChildren().clear();
     }
     private void mostrarError(String mensaje) {
         javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);

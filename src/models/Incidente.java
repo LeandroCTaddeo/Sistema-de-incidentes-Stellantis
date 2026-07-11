@@ -1,6 +1,7 @@
 package models;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Incidente {
 
@@ -23,6 +24,8 @@ public class Incidente {
     private String area;
     private String superiorInmediato;
     private String historial;
+    private LocalDateTime fechaResolucion;
+    private Integer resueltoPor;
 
     // Constructor para crear un incidente nuevo
     public Incidente(String titulo, String descripcion, Prioridad prioridad, int usuarioId,
@@ -56,7 +59,8 @@ public class Incidente {
             String sector,
             String fecha, LocalDate fechaRegistro, LocalDate fechaEmision, String lugar,
             String nombreApellido, String cargo, String matricula, String dni,
-            String area, String superiorInmediato, String historial) {
+            String area, String superiorInmediato, String historial,
+            LocalDateTime fechaResolucion, Integer resueltoPor) {
 
         this.id = id;
         this.titulo = titulo;
@@ -76,6 +80,8 @@ public class Incidente {
         this.area = area;
         this.superiorInmediato = superiorInmediato;
         this.historial = historial;
+        this.fechaResolucion = fechaResolucion;
+        this.resueltoPor = resueltoPor;
     }
 
     public int getId() {
@@ -124,5 +130,13 @@ public class Incidente {
     public String getArea() { return area; }
     public String getSuperiorInmediato() { return superiorInmediato; }
     public String getHistorial() { return historial; }
+    public LocalDateTime getFechaResolucion() { return fechaResolucion; }
+    public Integer getResueltoPor() { return resueltoPor; }
+
+    public void marcarResuelto(int administradorId, LocalDateTime fechaResolucion) {
+        this.estado = "RESUELTO";
+        this.resueltoPor = administradorId;
+        this.fechaResolucion = fechaResolucion;
+    }
 
 }

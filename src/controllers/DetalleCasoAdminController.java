@@ -1,9 +1,11 @@
 package controllers;
 
 import java.util.List;
+import java.util.Optional;
 
 import dao.BoletinAdminDAO;
 import dao.UsuarioDAO;
+import dao.IncidenteDAO;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,6 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import models.BoletinAdmin;
@@ -32,10 +35,12 @@ public class DetalleCasoAdminController {
 
     private Incidente incidenteActual;
     private Usuario usuarioActual;
+    private Runnable onCasoResuelto;
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
     private final BoletinAdminDAO boletinAdminDAO = new BoletinAdminDAO();
     private final PDFService pdfService = new PDFService();
+    private final IncidenteDAO incidenteDAO = new IncidenteDAO();
 
     @FXML
     public void initialize() {
@@ -49,7 +54,7 @@ public class DetalleCasoAdminController {
 
         btnNuevoBoletin.setOnAction(e -> crearNuevoBoletin());
         btnExportar.setOnAction(e -> exportarPDF());
-        btnResolver.setOnAction(e -> mostrarInfo("Función resolver pendiente de conectar."));
+        btnResolver.setOnAction(e -> resolverCaso());
     }
 
     public void cargarIncidente(Incidente incidente) {
@@ -59,6 +64,11 @@ public class DetalleCasoAdminController {
 
         cargarBoletines();
         mostrarVistaPreviaOriginal();
+        actualizarEstadoControles();
+    }
+
+    public void setOnCasoResuelto(Runnable onCasoResuelto) {
+        this.onCasoResuelto = onCasoResuelto;
     }
 
     private void mostrarVistaPreviaOriginal() {
@@ -152,7 +162,7 @@ public class DetalleCasoAdminController {
 
             boton.setOnAction(e -> mostrarVistaPreviaBoletin(boletin));
             boton.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2) {
+                if (e.getClickCount() == 2 && !estaResuelto()) {
                     abrirFormularioBoletin(boletin);
                 }
             });
@@ -184,7 +194,7 @@ public class DetalleCasoAdminController {
     }
 
     private void crearNuevoBoletin() {
-        if (incidenteActual == null) return;
+        if (incidenteActual == null || estaResuelto()) return;
 
         BoletinAdmin boletin = new BoletinAdmin();
         boletin.setIncidenteId(incidenteActual.getId());
@@ -240,6 +250,43 @@ public class DetalleCasoAdminController {
 
     private void volver() {
         btnVolver.getScene().getWindow().hide();
+    }
+
+    private void resolverCaso() {
+        if (incidenteActual == null || usuarioActual == null || estaResuelto()) return;
+
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Resolver expediente");
+        confirmacion.setHeaderText("Resolver expediente N° " + incidenteActual.getId());
+        confirmacion.setContentText(
+                "El caso saldrá de la Bandeja y quedará disponible en Mis incidentes. ¿Desea continuar?"
+        );
+
+        Optional<ButtonType> respuesta = confirmacion.showAndWait();
+        if (respuesta.isEmpty() || respuesta.get() != ButtonType.OK) return;
+
+        if (!incidenteDAO.resolver(incidenteActual.getId(), usuarioActual.getId())) {
+            mostrarError("No se pudo resolver el expediente o ya estaba resuelto.");
+            return;
+        }
+
+        incidenteActual.marcarResuelto(usuarioActual.getId(), java.time.LocalDateTime.now());
+        actualizarEstadoControles();
+        mostrarInfo("El expediente fue marcado como resuelto.");
+
+        if (onCasoResuelto != null) onCasoResuelto.run();
+        btnResolver.getScene().getWindow().hide();
+    }
+
+    private boolean estaResuelto() {
+        return incidenteActual != null && "RESUELTO".equalsIgnoreCase(incidenteActual.getEstado());
+    }
+
+    private void actualizarEstadoControles() {
+        boolean resuelto = estaResuelto();
+        btnNuevoBoletin.setDisable(resuelto);
+        btnResolver.setDisable(resuelto);
+        btnResolver.setText(resuelto ? "Caso resuelto" : "Resolver caso");
     }
 
     private String valor(String texto) {
