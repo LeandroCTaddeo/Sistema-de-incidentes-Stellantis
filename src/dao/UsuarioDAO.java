@@ -3,8 +3,10 @@ package dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import database.Conexion;
+import database.DatabaseException;
 import models.Usuario;
 
 public class UsuarioDAO {
@@ -19,30 +21,21 @@ public class UsuarioDAO {
                 WHERE usuario_windows = ?
                 """;
 
-        try {
-
-            Connection conexion = Conexion.conectar();
-
-            PreparedStatement ps = conexion.prepareStatement(sql);
-
+        try (Connection conexion = Conexion.conectar();
+             PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setString(1, usuarioWindows);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-
-                return new Usuario(
-                        rs.getInt("id"),
-                        rs.getString("nombre"),
-                        rs.getString("rol")
-                );
-
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Usuario(
+                            rs.getInt("id"),
+                            rs.getString("nombre"),
+                            rs.getString("rol")
+                    );
+                }
             }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
+        } catch (SQLException e) {
+            throw new DatabaseException("No se pudo consultar el usuario de Windows en la base de datos.", e);
         }
 
         return null;

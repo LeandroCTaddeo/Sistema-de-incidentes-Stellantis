@@ -28,12 +28,16 @@ import models.Imagen;
 
 public final class VisorImagenService {
 
+    private static final AlmacenamientoImagenService ALMACENAMIENTO =
+            new AlmacenamientoImagenService();
+
     private VisorImagenService() {}
 
     public static ImageView crearMiniatura(
             Imagen adjunto, List<Imagen> todas, double ancho, double alto) {
 
-        File archivo = new File(adjunto.getRuta());
+        File archivo = resolverArchivo(adjunto);
+        if (archivo == null) return null;
         if (!archivo.isFile()) return null;
 
         ImageView vista = new ImageView(
@@ -58,8 +62,8 @@ public final class VisorImagenService {
     public static void abrir(List<Imagen> adjuntos, Imagen seleccionado, Window owner) {
         List<File> archivos = new ArrayList<>();
         for (Imagen adjunto : adjuntos) {
-            File archivo = new File(adjunto.getRuta());
-            if (archivo.isFile()) archivos.add(archivo);
+            File archivo = resolverArchivo(adjunto);
+            if (archivo != null && archivo.isFile()) archivos.add(archivo);
         }
 
         if (archivos.isEmpty()) {
@@ -67,10 +71,10 @@ public final class VisorImagenService {
             return;
         }
 
-        File seleccionadoArchivo = new File(seleccionado.getRuta());
+        File seleccionadoArchivo = resolverArchivo(seleccionado);
         int posicionInicial = 0;
         for (int i = 0; i < archivos.size(); i++) {
-            if (archivos.get(i).equals(seleccionadoArchivo)) {
+            if (seleccionadoArchivo != null && archivos.get(i).equals(seleccionadoArchivo)) {
                 posicionInicial = i;
                 break;
             }
@@ -184,6 +188,14 @@ public final class VisorImagenService {
             numero++;
         }
         return destino;
+    }
+
+    private static File resolverArchivo(Imagen adjunto) {
+        try {
+            return ALMACENAMIENTO.resolver(adjunto.getRuta());
+        } catch (StorageException e) {
+            return null;
+        }
     }
 
     private static void mostrarError(String mensaje, Window owner) {
