@@ -6,7 +6,10 @@ import java.util.List;
 import dao.ReporteDAO;
 import dao.ReporteDAO.DatoConteo;
 import dao.ReporteDAO.Resumen;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.NumberAxis;
@@ -17,6 +20,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputControl;
+import javafx.scene.input.MouseEvent;
 
 public class ReportesController {
 
@@ -39,7 +44,31 @@ public class ReportesController {
         dpDesde.setValue(LocalDate.now().minusMonths(12));
         btnActualizar.setOnAction(e -> actualizar());
         btnCerrar.setOnAction(e -> btnCerrar.getScene().getWindow().hide());
+        configurarDesenfoqueAlHacerClick();
         actualizar();
+    }
+
+    private void configurarDesenfoqueAlHacerClick() {
+        Platform.runLater(() -> {
+            Parent raiz = dpDesde.getScene().getRoot();
+            raiz.setFocusTraversable(true);
+            raiz.addEventFilter(MouseEvent.MOUSE_PRESSED, evento -> {
+                if (!esCampoEditable(evento.getTarget())) {
+                    raiz.requestFocus();
+                }
+            });
+        });
+    }
+
+    private boolean esCampoEditable(Object objetivo) {
+        if (!(objetivo instanceof Node nodo)) return false;
+
+        while (nodo != null) {
+            if (nodo instanceof TextInputControl campo && campo.isEditable()) return true;
+            if (nodo instanceof DatePicker) return true;
+            nodo = nodo.getParent();
+        }
+        return false;
     }
 
     private void actualizar() {

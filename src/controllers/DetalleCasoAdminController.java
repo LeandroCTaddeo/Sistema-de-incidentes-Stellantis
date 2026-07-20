@@ -1,5 +1,8 @@
 package controllers;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +30,9 @@ import services.PDFService;
 import services.VisorImagenService;
 
 public class DetalleCasoAdminController {
+
+    private static final DateTimeFormatter FORMATO_FECHA_HORA =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML private Button btnVolver;
     @FXML private Button btnNuevoBoletin;
@@ -90,7 +96,7 @@ public class DetalleCasoAdminController {
         Label sector = new Label("Sector: " + valor(incidenteActual.getSector()));
         Label prioridad = new Label("Prioridad: " + valor(String.valueOf(incidenteActual.getPrioridad())));
         Label estado = new Label("Estado: " + valor(incidenteActual.getEstado()));
-        Label fecha = new Label("Fecha: " + valor(incidenteActual.getFecha()));
+        Label fecha = new Label("Fecha: " + formatearFechaHora(incidenteActual.getFecha()));
 
         Label descripcionTitulo = new Label("Descripción:");
         descripcionTitulo.setStyle("-fx-font-weight:bold;");
@@ -133,7 +139,9 @@ public class DetalleCasoAdminController {
         titulo.getStyleClass().add("detail-title");
 
         Label fecha = new Label("Fecha creación: " + valor(
-                boletin.getFechaCreacion() != null ? boletin.getFechaCreacion().toString() : ""
+                boletin.getFechaCreacion() != null
+                        ? boletin.getFechaCreacion().format(FORMATO_FECHA_HORA)
+                        : ""
         ));
 
         Label prioridad = new Label("Prioridad: " + valor(boletin.getPrioridad()));
@@ -319,6 +327,15 @@ public class DetalleCasoAdminController {
 
     private String valor(String texto) {
         return texto == null ? "" : texto;
+    }
+
+    private String formatearFechaHora(String texto) {
+        if (texto == null || texto.isBlank()) return "Sin fecha";
+        try {
+            return LocalDateTime.parse(texto).format(FORMATO_FECHA_HORA);
+        } catch (DateTimeParseException e) {
+            return texto.replace("T", " ");
+        }
     }
 
     private void mostrarInfo(String mensaje) {

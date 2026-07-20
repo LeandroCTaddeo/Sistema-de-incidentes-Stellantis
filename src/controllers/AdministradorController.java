@@ -1,16 +1,21 @@
 package controllers;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import dao.ImagenDAO;
 import dao.IncidenteDAO;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.control.DatePicker;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -23,9 +28,13 @@ import services.VisorImagenService;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 public class AdministradorController {
+
+    private static final DateTimeFormatter FORMATO_FECHA_HORA =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML private VBox listaIncidentes;
     @FXML private Label lblTitulo;
@@ -61,7 +70,31 @@ public class AdministradorController {
         txtBuscar.textProperty().addListener((obs, anterior, actual) -> cargarLista());
         dpDesde.valueProperty().addListener((obs, anterior, actual) -> cargarLista());
         dpHasta.valueProperty().addListener((obs, anterior, actual) -> cargarLista());
+        configurarDesenfoqueAlHacerClick();
         cargarLista();
+    }
+
+    private void configurarDesenfoqueAlHacerClick() {
+        Platform.runLater(() -> {
+            Parent raiz = txtBuscar.getScene().getRoot();
+            raiz.setFocusTraversable(true);
+            raiz.addEventFilter(MouseEvent.MOUSE_PRESSED, evento -> {
+                if (!esCampoEditable(evento.getTarget())) {
+                    raiz.requestFocus();
+                }
+            });
+        });
+    }
+
+    private boolean esCampoEditable(Object objetivo) {
+        if (!(objetivo instanceof Node nodo)) return false;
+
+        while (nodo != null) {
+            if (nodo instanceof TextInputControl campo && campo.isEditable()) return true;
+            if (nodo instanceof DatePicker) return true;
+            nodo = nodo.getParent();
+        }
+        return false;
     }
 
     private void cargarLista() {
@@ -100,10 +133,10 @@ public class AdministradorController {
 
             Label empleado = new Label("👤 " + incidente.getNombreEmpleado());
             empleado.getStyleClass().add("card-meta");
-            String textoFecha = incidente.getFecha().replace("T", " ");
+            String textoFecha = formatearFechaHora(incidente.getFecha());
             if (modoHistorico && incidente.getFechaResolucion() != null) {
                 textoFecha = "Resuelto: " + incidente.getFechaResolucion()
-                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                        .format(FORMATO_FECHA_HORA);
             }
             Label fecha = new Label("🕒 " + textoFecha);
             fecha.getStyleClass().add("card-meta");
@@ -132,6 +165,15 @@ public class AdministradorController {
             });
 
             listaIncidentes.getChildren().add(tarjeta);
+        }
+    }
+
+    private String formatearFechaHora(String valor) {
+        if (valor == null || valor.isBlank()) return "Sin fecha";
+        try {
+            return LocalDateTime.parse(valor).format(FORMATO_FECHA_HORA);
+        } catch (DateTimeParseException e) {
+            return valor.replace("T", " ");
         }
     }
 
