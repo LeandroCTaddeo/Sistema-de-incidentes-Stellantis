@@ -3,10 +3,12 @@ package dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import database.Conexion;
+import database.DatabaseException;
 import models.Imagen;
 
 public class ImagenDAO {
@@ -19,24 +21,14 @@ public class ImagenDAO {
                 VALUES (?,?)
                 """;
 
-        try {
-
-            Connection conexion = Conexion.conectar();
-
-            PreparedStatement ps = conexion.prepareStatement(sql);
-
+        try (Connection conexion = Conexion.conectar();
+             PreparedStatement ps = conexion.prepareStatement(sql)) {
             ps.setInt(1, incidenteId);
             ps.setString(2, ruta);
 
             ps.executeUpdate();
-
-            ps.close();
-            conexion.close();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
+        } catch (SQLException e) {
+            throw new DatabaseException("No se pudo registrar la imagen del incidente.", e);
         }
 
     }

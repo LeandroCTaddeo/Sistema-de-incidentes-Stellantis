@@ -16,6 +16,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import models.Incidente;
 import services.IncidenteService;
+import services.AlmacenamientoImagenService;
+import services.StorageException;
 import services.VisorImagenService;
 import models.Prioridad;
 import dao.UsuarioDAO;
@@ -57,6 +59,7 @@ public class BoletinController {
 	private UsuarioDAO usuarioDAO = new UsuarioDAO();
 
 	private ImagenDAO imagenDAO = new ImagenDAO();
+	private AlmacenamientoImagenService almacenamientoImagenes = new AlmacenamientoImagenService();
 
 	@FXML
 	public void initialize() {
@@ -188,20 +191,42 @@ public class BoletinController {
 				);
 
 		int idIncidente = incidenteService.guardar(incidente);
+		if (idIncidente <= 0) {
+			mostrarError("No se pudo guardar el incidente. Inténtelo nuevamente.");
+			return;
+		}
 
+		List<String> imagenesNoGuardadas = new ArrayList<>();
 		for (File archivo : imagenesSeleccionadas) {
-
-			imagenDAO.guardar(
-					idIncidente,
-					archivo.getAbsolutePath()
-					);
-
+			String claveAlmacenada = null;
+			try {
+				claveAlmacenada = almacenamientoImagenes.almacenar(archivo, idIncidente);
+				imagenDAO.guardar(idIncidente, claveAlmacenada);
+			} catch (RuntimeException e) {
+				if (claveAlmacenada != null) {
+					try {
+						almacenamientoImagenes.eliminar(claveAlmacenada);
+					} catch (StorageException ignored) {
+						// La limpieza no debe ocultar el error original.
+					}
+				}
+				imagenesNoGuardadas.add(archivo.getName());
+			}
 		}
 
 		Alert alerta = new Alert(Alert.AlertType.INFORMATION);
 		alerta.setTitle("Correcto");
 		alerta.setHeaderText(null);
-		alerta.setContentText("Incidente enviado correctamente.");
+		if (imagenesNoGuardadas.isEmpty()) {
+			alerta.setContentText("Incidente enviado correctamente.");
+		} else {
+			alerta.setAlertType(Alert.AlertType.WARNING);
+			alerta.setTitle("Incidente enviado con advertencias");
+			alerta.setContentText(
+					"El incidente se guardó, pero no se pudieron almacenar estas imágenes:\n"
+					+ String.join("\n", imagenesNoGuardadas)
+			);
+		}
 		alerta.showAndWait();
 
 		limpiarFormulario();

@@ -24,6 +24,8 @@ public class PDFService {
 
     private BoletinAdminDAO boletinDAO = new BoletinAdminDAO();
     private ImagenDAO imagenDAO = new ImagenDAO();
+    private AlmacenamientoImagenService almacenamientoImagenes =
+            new AlmacenamientoImagenService();
 
     public boolean exportarExpediente(Incidente incidente, Window ventana) throws Exception {
 
@@ -76,7 +78,12 @@ public class PDFService {
         int numero = 1;
 
         for (Imagen adjunto : imagenes) {
-            File archivoImagen = new File(adjunto.getRuta());
+            File archivoImagen;
+            try {
+                archivoImagen = almacenamientoImagenes.resolver(adjunto.getRuta());
+            } catch (StorageException e) {
+                continue;
+            }
             if (!archivoImagen.isFile()) {
                 continue;
             }
