@@ -8,7 +8,7 @@
 <ScrollPane xmlns="http://javafx.com/javafx/21"
 	xmlns:fx="http://javafx.com/fxml"
 	fx:controller="controllers.BoletinController" fitToWidth="true"
-	fitToHeight="true" stylesheets="@../resources/css/empleado.css"
+	stylesheets="@../resources/css/empleado.css"
 	styleClass="root-scroll">
 
 	<content>
@@ -163,7 +163,9 @@
 
 				<HBox spacing="10" styleClass="images-box">
 					<Button fx:id="btnAdjuntar" text="Adjuntar imágenes" />
-					<FlowPane fx:id="contenedorImagenes" hgap="10" vgap="10" />
+					<FlowPane fx:id="contenedorImagenes" hgap="10" vgap="10"
+						minWidth="0" maxWidth="9999" prefWrapLength="900"
+						HBox.hgrow="ALWAYS" />
 				</HBox>
 			</VBox>
 

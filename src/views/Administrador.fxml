@@ -12,7 +12,7 @@
 
     <left>
 
-        <VBox prefWidth="220" styleClass="sidebar">
+        <VBox prefWidth="220" minWidth="220" maxWidth="220" styleClass="sidebar">
 
             <Label text="STELLANTIS" styleClass="brand-title"/>
 
@@ -82,7 +82,11 @@
 
                     </ScrollPane>
 
-                    <VBox styleClass="detail-panel">
+                    <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                                minWidth="0" styleClass="content-scroll">
+
+                      <content>
+                       <VBox styleClass="detail-panel">
 
                         <Label fx:id="lblTitulo"
                                text="Seleccione un incidente"
@@ -131,7 +135,9 @@
                         <FlowPane fx:id="contenedorImagenes"
                                   hgap="10"
                                   vgap="10"
-                                  prefHeight="120"/>
+                                  minWidth="0"
+                                  maxWidth="9999"
+                                  prefWrapLength="600"/>
 
                         <HBox spacing="10">
 
@@ -145,7 +151,9 @@
 
                         </HBox>
 
-                    </VBox>
+                       </VBox>
+                      </content>
+                    </ScrollPane>
 
                 </SplitPane>
 

@@ -96,11 +96,29 @@ public final class VisorImagenService {
         ImageView imagenView = new ImageView();
         imagenView.setPreserveRatio(true);
         imagenView.setSmooth(true);
+        imagenView.setManaged(false);
 
         StackPane centro = new StackPane(imagenView);
         centro.getStyleClass().add("image-viewer-canvas");
-        imagenView.fitWidthProperty().bind(centro.widthProperty().subtract(40));
-        imagenView.fitHeightProperty().bind(centro.heightProperty().subtract(40));
+        centro.setMinSize(0, 0);
+        centro.setPrefSize(0, 0);
+
+        Runnable ajustarImagen = () -> {
+            double anchoDisponible = Math.max(0, centro.getWidth() - 40);
+            double altoDisponible = Math.max(0, centro.getHeight() - 40);
+            imagenView.setFitWidth(anchoDisponible);
+            imagenView.setFitHeight(altoDisponible);
+
+            var limites = imagenView.getBoundsInLocal();
+            imagenView.relocate(
+                    Math.max(0, (centro.getWidth() - limites.getWidth()) / 2),
+                    Math.max(0, (centro.getHeight() - limites.getHeight()) / 2)
+            );
+        };
+
+        centro.widthProperty().addListener((obs, anterior, actual) -> ajustarImagen.run());
+        centro.heightProperty().addListener((obs, anterior, actual) -> ajustarImagen.run());
+        imagenView.imageProperty().addListener((obs, anterior, actual) -> ajustarImagen.run());
         root.setCenter(centro);
 
         Button anterior = new Button("Anterior");
@@ -123,6 +141,7 @@ public final class VisorImagenService {
         Runnable actualizar = () -> {
             File actual = archivos.get(posicion[0]);
             imagenView.setImage(new Image(actual.toURI().toString()));
+            ajustarImagen.run();
             titulo.setText(actual.getName() + "  ·  " + (posicion[0] + 1) + " de " + archivos.size());
             anterior.setDisable(posicion[0] == 0);
             siguiente.setDisable(posicion[0] == archivos.size() - 1);

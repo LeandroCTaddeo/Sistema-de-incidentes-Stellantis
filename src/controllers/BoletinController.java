@@ -1,6 +1,8 @@
 package controllers;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXML;
@@ -9,6 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -29,8 +32,12 @@ import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.application.Platform;
+import javafx.util.StringConverter;
 
 public class BoletinController {
+
+	private static final DateTimeFormatter FORMATO_FECHA =
+			DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 	private IncidenteService incidenteService = new IncidenteService();
 	private List<File> imagenesSeleccionadas = new ArrayList<>();
@@ -79,8 +86,61 @@ public class BoletinController {
 
 		btnEnviar.setOnAction(event -> enviarIncidente());
 		btnAdjuntar.setOnAction(event -> seleccionarImagenes());
+		configurarFechas();
+		configurarCamposNumericos();
+		configurarLimitesDeTexto();
 		configurarNavegacionTeclado();
-		Platform.runLater(() -> dpFechaRegistro.requestFocus());
+		Platform.runLater(() -> enfocar(dpFechaRegistro));
+	}
+
+	private void configurarFechas() {
+		StringConverter<LocalDate> conversor = new StringConverter<>() {
+			@Override
+			public String toString(LocalDate fecha) {
+				return fecha == null ? "" : FORMATO_FECHA.format(fecha);
+			}
+
+			@Override
+			public LocalDate fromString(String texto) {
+				if (texto == null || texto.isBlank()) return null;
+				try {
+					return LocalDate.parse(texto.trim(), FORMATO_FECHA);
+				} catch (Exception e) {
+					return null;
+				}
+			}
+		};
+
+		for (DatePicker selector : List.of(dpFechaRegistro, dpFechaEmision)) {
+			selector.setConverter(conversor);
+			selector.getEditor().setPromptText("dd/mm/aaaa");
+			selector.focusedProperty().addListener((obs, anterior, enfocado) -> {
+				if (enfocado && !selector.isDisabled()) {
+					Platform.runLater(selector::show);
+				}
+			});
+		}
+	}
+
+	private void configurarCamposNumericos() {
+		txtDni.setTextFormatter(new TextFormatter<>(cambio ->
+				cambio.getControlNewText().matches("\\d{0,50}") ? cambio : null));
+		txtMatricula.setTextFormatter(new TextFormatter<>(cambio ->
+				cambio.getControlNewText().matches("\\d{0,50}") ? cambio : null));
+	}
+
+	private void configurarLimitesDeTexto() {
+		aplicarLimite(txtTitulo, 200);
+		aplicarLimite(txtLugar, 150);
+		aplicarLimite(txtNombreApellido, 150);
+		aplicarLimite(txtCargo, 100);
+		aplicarLimite(txtArea, 100);
+		aplicarLimite(txtSuperiorInmediato, 150);
+	}
+
+	private void aplicarLimite(TextField campo, int maximo) {
+		campo.setTextFormatter(new TextFormatter<>(cambio ->
+				cambio.getControlNewText().length() <= maximo ? cambio : null));
 	}
 
 	private void configurarNavegacionTeclado() {
@@ -107,19 +167,26 @@ public class BoletinController {
 
 			if (actual instanceof TextArea) {
 				actual.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-					if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
+					if (event.getCode() == KeyCode.ENTER && !event.isShiftDown()) {
 						event.consume();
-						siguiente.requestFocus();
+						enfocar(siguiente);
 					}
 				});
 			} else {
 				actual.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
 					if (event.getCode() == KeyCode.ENTER) {
 						event.consume();
-						siguiente.requestFocus();
+						enfocar(siguiente);
 					}
 				});
 			}
+		}
+	}
+
+	private void enfocar(Node nodo) {
+		nodo.requestFocus();
+		if (nodo instanceof DatePicker selector && !selector.isDisabled()) {
+			Platform.runLater(selector::show);
 		}
 	}
 
@@ -160,18 +227,10 @@ public class BoletinController {
 	}
 
 	private void enviarIncidente() {
+		if (!validarCamposObligatorios()) return;
+
 		String titulo = txtTitulo.getText().trim();
 		String descripcion = txtDescripcion.getText().trim();
-
-		if (titulo.isEmpty()) {
-			mostrarError("Debe ingresar un título.");
-			return;
-		}
-
-		if (descripcion.isEmpty()) {
-			mostrarError("Debe ingresar una descripción.");
-			return;
-		}
 
 		Incidente incidente = new Incidente(
 				titulo,
@@ -230,6 +289,48 @@ public class BoletinController {
 		alerta.showAndWait();
 
 		limpiarFormulario();
+	}
+
+	private boolean validarCamposObligatorios() {
+		List<String> faltantes = new ArrayList<>();
+		Node primero = null;
+
+		primero = agregarFaltante(faltantes, primero, "Fecha/Hora Registro", dpFechaRegistro,
+				dpFechaRegistro.getValue() == null);
+		primero = agregarFaltante(faltantes, primero, "Fecha/Hora Emisión", dpFechaEmision,
+				dpFechaEmision.getValue() == null);
+		primero = agregarFaltante(faltantes, primero, "Lugar", txtLugar, estaVacio(txtLugar));
+		primero = agregarFaltante(faltantes, primero, "Título", txtTitulo, estaVacio(txtTitulo));
+		primero = agregarFaltante(faltantes, primero, "Descripción", txtDescripcion, estaVacio(txtDescripcion));
+		primero = agregarFaltante(faltantes, primero, "Nombre y Apellido", txtNombreApellido,
+				estaVacio(txtNombreApellido));
+		primero = agregarFaltante(faltantes, primero, "Cargo", txtCargo, estaVacio(txtCargo));
+		primero = agregarFaltante(faltantes, primero, "Matrícula", txtMatricula, estaVacio(txtMatricula));
+		primero = agregarFaltante(faltantes, primero, "DNI", txtDni, estaVacio(txtDni));
+		primero = agregarFaltante(faltantes, primero, "Área", txtArea, estaVacio(txtArea));
+		primero = agregarFaltante(faltantes, primero, "Superior inmediato", txtSuperiorInmediato,
+				estaVacio(txtSuperiorInmediato));
+		primero = agregarFaltante(faltantes, primero, "Historial", txtHistorial, estaVacio(txtHistorial));
+		primero = agregarFaltante(faltantes, primero, "Prioridad", cmbPrioridad,
+				cmbPrioridad.getValue() == null);
+
+		if (faltantes.isEmpty()) return true;
+
+		mostrarError("Debe completar los siguientes campos obligatorios:\n\n• "
+				+ String.join("\n• ", faltantes));
+		if (primero != null) enfocar(primero);
+		return false;
+	}
+
+	private Node agregarFaltante(List<String> faltantes, Node primero, String nombre,
+			Node control, boolean falta) {
+		if (!falta) return primero;
+		faltantes.add(nombre);
+		return primero == null ? control : primero;
+	}
+
+	private boolean estaVacio(javafx.scene.control.TextInputControl campo) {
+		return campo.getText() == null || campo.getText().trim().isEmpty();
 	}
 
 	private void limpiarFormulario() {

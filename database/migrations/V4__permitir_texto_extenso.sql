@@ -1,0 +1,11 @@
+BEGIN;
+
+ALTER TABLE IF EXISTS incidentes
+    ALTER COLUMN descripcion TYPE TEXT,
+    ALTER COLUMN historial TYPE TEXT;
+
+ALTER TABLE IF EXISTS boletines_admin
+    ALTER COLUMN descripcion TYPE TEXT,
+    ALTER COLUMN historial TYPE TEXT;
+
+COMMIT;

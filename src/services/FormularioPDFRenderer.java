@@ -8,12 +8,12 @@ import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
 import com.lowagie.text.Image;
-import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.ColumnText;
 import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfWriter;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import models.BoletinAdmin;
 import models.Incidente;
@@ -28,12 +28,14 @@ public class FormularioPDFRenderer {
         PdfContentByte cb = writer.getDirectContent();
         Font texto = FontFactory.getFont(FontFactory.HELVETICA, 9);
 
-        escribirCampo(cb, 160, 708, 280, 724, valor(i.getFechaRegistro()), texto);
-        escribirCampo(cb, 440, 708, 560, 724, valor(i.getFechaEmision()), texto);
+        escribirCampo(cb, 160, 708, 280, 724, formatearFecha(i.getFechaRegistro()), texto);
+        escribirCampo(cb, 440, 708, 560, 724, formatearFecha(i.getFechaEmision()), texto);
 
         escribirCampo(cb, 105, 668, 540, 684, valor(i.getLugar()), texto);
         escribirCampo(cb, 105, 625, 300, 641, valor(i.getTitulo()), texto);
-        escribirCampo(cb, 430, 585, 545, 640, valor(i.getDescripcion()), texto);
+        boolean descripcionContinua = escribirCampo(
+				cb, 430, 585, 545, 640, valor(i.getDescripcion()), texto
+		);
 
         escribirCampo(cb, 160, 512, 300, 528, valor(i.getNombreApellido()), texto);
         escribirCampo(cb, 395, 512, 540, 528, valor(i.getCargo()), texto);
@@ -42,9 +44,18 @@ public class FormularioPDFRenderer {
 
         escribirCampo(cb, 105, 405, 300, 421, valor(i.getArea()), texto);
         escribirCampo(cb, 430, 405, 540, 421, valor(i.getSuperiorInmediato()), texto);
-        escribirCampo(cb, 40, 215, 550, 350, valor(i.getHistorial()), texto);
+        boolean historialContinua = escribirCampo(
+				cb, 40, 215, 550, 350, valor(i.getHistorial()), texto
+		);
 
-        escribirCampo(cb, 500, 40, 560, 55, "Prioridad: " + valor(String.valueOf(i.getPrioridad())), texto);
+        escribirCampo(cb, 455, 40, 560, 55, "Prioridad: " + valor(String.valueOf(i.getPrioridad())), texto);
+
+		agregarContinuacionSiHaceFalta(
+				documento,
+				"BOLETÍN ORIGINAL DEL EMPLEADO",
+				descripcionContinua ? valor(i.getDescripcion()) : null,
+				historialContinua ? valor(i.getHistorial()) : null
+		);
     }
 
     public void renderBoletinAdministrador(Document documento, PdfWriter writer, BoletinAdmin b, int numero) throws Exception {
@@ -53,12 +64,14 @@ public class FormularioPDFRenderer {
         PdfContentByte cb = writer.getDirectContent();
         Font texto = FontFactory.getFont(FontFactory.HELVETICA, 9);
 
-        escribirCampo(cb, 160, 708, 280, 724, valor(b.getFechaRegistro()), texto);
-        escribirCampo(cb, 410, 708, 540, 724, valor(b.getFechaEmision()), texto);
+        escribirCampo(cb, 160, 708, 280, 724, formatearFecha(b.getFechaRegistro()), texto);
+        escribirCampo(cb, 410, 708, 540, 724, formatearFecha(b.getFechaEmision()), texto);
 
         escribirCampo(cb, 105, 668, 540, 684, valor(b.getLugar()), texto);
         escribirCampo(cb, 105, 625, 300, 641, valor(b.getTitulo()), texto);
-        escribirCampo(cb, 430, 585, 545, 640, valor(b.getDescripcion()), texto);
+        boolean descripcionContinua = escribirCampo(
+				cb, 430, 585, 545, 640, valor(b.getDescripcion()), texto
+		);
 
         escribirCampo(cb, 160, 512, 300, 528, valor(b.getNombreApellido()), texto);
         escribirCampo(cb, 395, 512, 540, 528, valor(b.getCargo()), texto);
@@ -68,9 +81,18 @@ public class FormularioPDFRenderer {
         escribirCampo(cb, 105, 405, 300, 421, valor(b.getArea()), texto);
         escribirCampo(cb, 430, 405, 540, 421, valor(b.getSuperiorInmediato()), texto);
 
-        escribirCampo(cb, 40, 215, 550, 350, valor(b.getHistorial()), texto);
+        boolean historialContinua = escribirCampo(
+				cb, 40, 215, 550, 350, valor(b.getHistorial()), texto
+		);
 
-        escribirCampo(cb, 500, 40, 560, 55, "Prioridad: " + valor(b.getPrioridad()), texto);
+        escribirCampo(cb, 455, 40, 560, 55, "Prioridad: " + valor(b.getPrioridad()), texto);
+
+		agregarContinuacionSiHaceFalta(
+				documento,
+				"BOLETÍN DE INVESTIGACIÓN N° " + numero,
+				descripcionContinua ? valor(b.getDescripcion()) : null,
+				historialContinua ? valor(b.getHistorial()) : null
+		);
     }
 
     private void dibujarFormularioBase(Document documento, PdfWriter writer, String tituloFormulario) throws Exception {
@@ -191,31 +213,57 @@ public class FormularioPDFRenderer {
         );
     }
 
-    private void escribirCampo(PdfContentByte cb, float x1, float y1, float x2, float y2, String texto, Font fuente) {
+    private boolean escribirCampo(PdfContentByte cb, float x1, float y1, float x2, float y2,
+			String texto, Font fuente) throws Exception {
         ColumnText ct = new ColumnText(cb);
         ct.setSimpleColumn(new Phrase(valor(texto), fuente), x1, y1, x2, y2, 12, Element.ALIGN_LEFT);
-        try {
-            ct.go();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		int estado = ct.go();
+		return ColumnText.hasMoreText(estado);
     }
+
+	private void agregarContinuacionSiHaceFalta(Document documento, String boletin,
+			String descripcionCompleta, String historialCompleto) throws Exception {
+		if (descripcionCompleta == null && historialCompleto == null) return;
+
+		documento.newPage();
+
+		Font titulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+		Font subtitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
+		Font cuerpo = FontFactory.getFont(FontFactory.HELVETICA, 10);
+
+		Paragraph encabezado = new Paragraph("CONTINUACIÓN - " + boletin, titulo);
+		encabezado.setAlignment(Element.ALIGN_CENTER);
+		encabezado.setSpacingAfter(24);
+		documento.add(encabezado);
+
+		if (descripcionCompleta != null) {
+			Paragraph etiqueta = new Paragraph("DESCRIPCIÓN COMPLETA", subtitulo);
+			etiqueta.setSpacingAfter(8);
+			documento.add(etiqueta);
+
+			Paragraph contenido = new Paragraph(descripcionCompleta, cuerpo);
+			contenido.setLeading(14);
+			contenido.setSpacingAfter(20);
+			documento.add(contenido);
+		}
+
+		if (historialCompleto != null) {
+			Paragraph etiqueta = new Paragraph("HISTORIAL COMPLETO", subtitulo);
+			etiqueta.setSpacingAfter(8);
+			documento.add(etiqueta);
+
+			Paragraph contenido = new Paragraph(historialCompleto, cuerpo);
+			contenido.setLeading(14);
+			documento.add(contenido);
+		}
+	}
 
     private String valor(Object obj) {
         return obj == null ? "" : String.valueOf(obj);
     }
-    
-    private String formatearFecha(String fecha) {
-        if (fecha == null || fecha.isBlank()) {
-            return "";
-        }
 
-        try {
-            LocalDateTime f = LocalDateTime.parse(fecha);
-            return f.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        } catch (Exception e) {
-            return fecha;
-        }
-    }
+	private String formatearFecha(LocalDate fecha) {
+		return fecha == null ? "" : fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+	}
     
 }
