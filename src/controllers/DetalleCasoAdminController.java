@@ -97,20 +97,40 @@ public class DetalleCasoAdminController {
         Label prioridad = new Label("Prioridad: " + valor(String.valueOf(incidenteActual.getPrioridad())));
         Label estado = new Label("Estado: " + valor(incidenteActual.getEstado()));
         Label fecha = new Label("Fecha: " + formatearFechaHora(incidenteActual.getFecha()));
+		Label lugar = crearEtiquetaAjustable("Lugar: " + valor(incidenteActual.getLugar()));
+		Label involucrado = crearEtiquetaAjustable(
+				"Involucrado: " + valor(incidenteActual.getNombreApellido())
+				+ " | Cargo: " + valor(incidenteActual.getCargo())
+		);
+		Label identificacion = crearEtiquetaAjustable(
+				"Matrícula: " + valor(incidenteActual.getMatricula())
+				+ " | DNI: " + valor(incidenteActual.getDni())
+		);
+		Label sectorBoletin = crearEtiquetaAjustable(
+				"Área: " + valor(incidenteActual.getArea())
+				+ " | Superior inmediato: " + valor(incidenteActual.getSuperiorInmediato())
+		);
 
         Label descripcionTitulo = new Label("Descripción:");
         descripcionTitulo.setStyle("-fx-font-weight:bold;");
         descripcionTitulo.getStyleClass().add("section-label");
 
-        Label descripcion = new Label(valor(incidenteActual.getDescripcion()));
-        descripcion.setWrapText(true);
+        Label descripcion = crearEtiquetaAjustable(valor(incidenteActual.getDescripcion()));
+
+		Label historialTitulo = new Label("Historial:");
+		historialTitulo.setStyle("-fx-font-weight:bold;");
+		historialTitulo.getStyleClass().add("section-label");
+
+		Label historial = crearEtiquetaAjustable(valor(incidenteActual.getHistorial()));
 
         Label ayuda = new Label("Doble clic en el documento de la izquierda para abrir el formulario completo.");
         ayuda.setStyle("-fx-text-fill:#777;");
 
         panelVistaPrevia.getChildren().addAll(
                 titulo, caso, empleado, sector, prioridad, estado, fecha,
-                descripcionTitulo, descripcion
+				lugar, involucrado, identificacion, sectorBoletin,
+				descripcionTitulo, descripcion,
+				historialTitulo, historial
         );
 
         List<Imagen> imagenes = imagenDAO.obtenerPorIncidente(incidenteActual.getId());
@@ -119,6 +139,11 @@ public class DetalleCasoAdminController {
             imagenesTitulo.getStyleClass().add("section-label");
 
             FlowPane miniaturas = new FlowPane(10, 10);
+			miniaturas.setMinWidth(0);
+			miniaturas.setMaxWidth(Double.MAX_VALUE);
+			miniaturas.prefWrapLengthProperty().bind(
+					panelVistaPrevia.widthProperty().subtract(48)
+			);
             for (Imagen adjunto : imagenes) {
                 ImageView miniatura = VisorImagenService.crearMiniatura(adjunto, imagenes, 150, 110);
                 if (miniatura != null) miniaturas.getChildren().add(miniatura);
@@ -153,15 +178,13 @@ public class DetalleCasoAdminController {
         descTitulo.setStyle("-fx-font-weight:bold;");
         descTitulo.getStyleClass().add("section-label");
 
-        Label descripcion = new Label(valor(boletin.getDescripcion()));
-        descripcion.setWrapText(true);
+        Label descripcion = crearEtiquetaAjustable(valor(boletin.getDescripcion()));
 
         Label historialTitulo = new Label("Historial:");
         historialTitulo.setStyle("-fx-font-weight:bold;");
         historialTitulo.getStyleClass().add("section-label");
 
-        Label historial = new Label(valor(boletin.getHistorial()));
-        historial.setWrapText(true);
+        Label historial = crearEtiquetaAjustable(valor(boletin.getHistorial()));
 
         Label ayuda = new Label("Doble clic sobre el boletín para editarlo.");
         ayuda.setStyle("-fx-text-fill:#777;");
@@ -280,7 +303,10 @@ public class DetalleCasoAdminController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            mostrarError("No se pudo exportar el expediente.");
+			String detalle = e.getMessage() == null || e.getMessage().isBlank()
+					? ""
+					: "\n\nDetalle: " + e.getMessage();
+			mostrarError("No se pudo exportar el expediente." + detalle);
         }
     }
 
@@ -328,6 +354,15 @@ public class DetalleCasoAdminController {
     private String valor(String texto) {
         return texto == null ? "" : texto;
     }
+
+	private Label crearEtiquetaAjustable(String texto) {
+		Label etiqueta = new Label(texto);
+		etiqueta.setWrapText(true);
+		etiqueta.setMinWidth(0);
+		etiqueta.setMaxWidth(Double.MAX_VALUE);
+		etiqueta.prefWidthProperty().bind(panelVistaPrevia.widthProperty().subtract(48));
+		return etiqueta;
+	}
 
     private String formatearFechaHora(String texto) {
         if (texto == null || texto.isBlank()) return "Sin fecha";
