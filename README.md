@@ -30,6 +30,8 @@ La aplicación lee su configuración mediante variables de entorno. No se deben 
 | `DB_PASSWORD` | Sí | Contraseña de PostgreSQL. |
 | `DB_URL` | No | URL JDBC. Por defecto: `jdbc:postgresql://localhost:5432/sistema_incidentes`. |
 | `INCIDENTES_FILES_PATH` | No | Carpeta administrada para las imágenes. En desarrollo usa `%USERPROFILE%\SistemaIncidentes\imagenes`. |
+| `INCIDENTES_DATA_SOURCE` | No | `JDBC` por defecto. Usar `API` para probar la lectura de la bandeja mediante el backend. |
+| `INCIDENTES_API_URL` | No | URL del backend. Por defecto: `http://127.0.0.1:8080`. |
 
 En producción, `INCIDENTES_FILES_PATH` debe apuntar a una ubicación central accesible por los equipos autorizados mediante la red interna o la VPN.
 
@@ -43,6 +45,38 @@ No es necesario instalar Maven: el repositorio incluye Maven Wrapper.
 ```
 
 En Eclipse, después de incorporar archivos nuevos, actualizar el proyecto con `F5` y ejecutar `Project > Clean`.
+
+## API interna en desarrollo
+
+El repositorio incluye un backend independiente en `backend/`. Esta primera etapa no reemplaza todavía el acceso JDBC del cliente JavaFX ni modifica sus pantallas.
+
+Variables utilizadas por el backend:
+
+| Variable | Obligatoria | Descripción |
+| --- | --- | --- |
+| `DB_USER` | Sí | Usuario de PostgreSQL utilizado sólo por el servidor. |
+| `DB_PASSWORD` | Sí | Contraseña de PostgreSQL utilizada sólo por el servidor. |
+| `DB_URL` | No | URL JDBC del servidor PostgreSQL. |
+| `API_HOST` | No | Interfaz de escucha. Por defecto: `127.0.0.1`. |
+| `API_PORT` | No | Puerto HTTP local. Por defecto: `8080`. |
+
+Compilar y ejecutar la API desde la raíz del repositorio:
+
+```powershell
+.\mvnw.cmd -f backend\pom.xml clean verify
+.\mvnw.cmd -f backend\pom.xml spring-boot:run
+```
+
+Endpoints iniciales:
+
+- `GET http://127.0.0.1:8080/api/health`
+- `GET http://127.0.0.1:8080/api/incidentes`
+- `GET http://127.0.0.1:8080/api/incidentes?estado=PENDIENTE`
+- `GET http://127.0.0.1:8080/api/incidentes?estado=RESUELTO`
+
+Esta etapa escucha sólo en la computadora local. No se debe cambiar `API_HOST` para exponer el servicio en la red hasta incorporar autenticación y HTTPS.
+
+Para probar la bandeja administrativa a través de la API, primero se inicia el backend y luego se ejecuta JavaFX con `INCIDENTES_DATA_SOURCE=API`. Las escrituras y las funciones que todavía no fueron migradas continúan usando JDBC durante esta transición.
 
 ## Arquitectura actual
 

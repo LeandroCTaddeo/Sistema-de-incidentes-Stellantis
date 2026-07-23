@@ -12,9 +12,19 @@ import java.sql.ResultSet;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+
+import api.IncidenteApiClient;
 import models.Prioridad;
 
 public class IncidenteDAO {
+
+	private final IncidenteApiClient apiClient = new IncidenteApiClient();
+
+	private boolean usarApiParaLecturas() {
+		return "API".equalsIgnoreCase(
+				System.getenv().getOrDefault("INCIDENTES_DATA_SOURCE", "JDBC")
+		);
+	}
 
 	public int guardar(Incidente incidente) {
 
@@ -77,14 +87,17 @@ public class IncidenteDAO {
 		}
 
 	public List<Incidente> obtenerTodos() {
+		if (usarApiParaLecturas()) return apiClient.listar(null);
 		return obtenerPorEstado(null);
 	}
 
 	public List<Incidente> obtenerPendientes() {
+		if (usarApiParaLecturas()) return apiClient.listar("PENDIENTE");
 		return obtenerPorEstado("PENDIENTE");
 	}
 
 	public List<Incidente> obtenerResueltos() {
+		if (usarApiParaLecturas()) return apiClient.listar("RESUELTO");
 		return obtenerPorEstado("RESUELTO");
 	}
 
@@ -186,6 +199,7 @@ public class IncidenteDAO {
 		return new Incidente(
 				rs.getInt("id"), rs.getString("titulo"), rs.getString("descripcion"),
 				Prioridad.valueOf(rs.getString("prioridad")), rs.getString("estado"),
+				rs.getInt("usuario_id"),
 				rs.getString("nombre"), rs.getString("sector"),
 				rs.getTimestamp("fecha").toLocalDateTime().toString(),
 				obtenerFecha(rs, "fecha_registro"), obtenerFecha(rs, "fecha_emision"),
