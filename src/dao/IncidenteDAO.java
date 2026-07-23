@@ -18,12 +18,19 @@ import models.Prioridad;
 
 public class IncidenteDAO {
 
-	private final IncidenteApiClient apiClient = new IncidenteApiClient();
+	private IncidenteApiClient apiClient;
 
 	private boolean usarApiParaLecturas() {
 		return "API".equalsIgnoreCase(
 				System.getenv().getOrDefault("INCIDENTES_DATA_SOURCE", "JDBC")
 		);
+	}
+
+	private IncidenteApiClient apiClient() {
+		if (apiClient == null) {
+			apiClient = new IncidenteApiClient();
+		}
+		return apiClient;
 	}
 
 	public int guardar(Incidente incidente) {
@@ -87,17 +94,17 @@ public class IncidenteDAO {
 		}
 
 	public List<Incidente> obtenerTodos() {
-		if (usarApiParaLecturas()) return apiClient.listar(null);
+		if (usarApiParaLecturas()) return apiClient().listar(null);
 		return obtenerPorEstado(null);
 	}
 
 	public List<Incidente> obtenerPendientes() {
-		if (usarApiParaLecturas()) return apiClient.listar("PENDIENTE");
+		if (usarApiParaLecturas()) return apiClient().listar("PENDIENTE");
 		return obtenerPorEstado("PENDIENTE");
 	}
 
 	public List<Incidente> obtenerResueltos() {
-		if (usarApiParaLecturas()) return apiClient.listar("RESUELTO");
+		if (usarApiParaLecturas()) return apiClient().listar("RESUELTO");
 		return obtenerPorEstado("RESUELTO");
 	}
 

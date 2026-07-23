@@ -16,6 +16,12 @@ server:
   port: ${API_PORT:8080}
   shutdown: graceful
 
+api:
+  security:
+    token: ${API_INTERNAL_TOKEN:}
+    user: ${API_INTERNAL_USER:desktop-local}
+    role: ${API_INTERNAL_ROLE:ADMIN}
+
 management:
   endpoints:
     web:

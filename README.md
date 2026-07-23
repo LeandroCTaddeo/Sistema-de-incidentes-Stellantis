@@ -32,6 +32,7 @@ La aplicación lee su configuración mediante variables de entorno. No se deben 
 | `INCIDENTES_FILES_PATH` | No | Carpeta administrada para las imágenes. En desarrollo usa `%USERPROFILE%\SistemaIncidentes\imagenes`. |
 | `INCIDENTES_DATA_SOURCE` | No | `JDBC` por defecto. Usar `API` para probar la lectura de la bandeja mediante el backend. |
 | `INCIDENTES_API_URL` | No | URL del backend. Por defecto: `http://127.0.0.1:8080`. |
+| `INCIDENTES_API_TOKEN` | Sí, en modo `API` | Token interno que debe coincidir con `API_INTERNAL_TOKEN` del backend. |
 
 En producción, `INCIDENTES_FILES_PATH` debe apuntar a una ubicación central accesible por los equipos autorizados mediante la red interna o la VPN.
 
@@ -59,6 +60,9 @@ Variables utilizadas por el backend:
 | `DB_URL` | No | URL JDBC del servidor PostgreSQL. |
 | `API_HOST` | No | Interfaz de escucha. Por defecto: `127.0.0.1`. |
 | `API_PORT` | No | Puerto HTTP local. Por defecto: `8080`. |
+| `API_INTERNAL_TOKEN` | Sí | Token interno exigido por los endpoints protegidos. No debe guardarse en Git. |
+| `API_INTERNAL_USER` | No | Identidad técnica asociada al token. Por defecto: `desktop-local`. |
+| `API_INTERNAL_ROLE` | No | Rol técnico asociado al token. Por defecto: `ADMIN`. |
 
 Compilar y ejecutar la API desde la raíz del repositorio:
 
@@ -73,6 +77,20 @@ Endpoints iniciales:
 - `GET http://127.0.0.1:8080/api/incidentes`
 - `GET http://127.0.0.1:8080/api/incidentes?estado=PENDIENTE`
 - `GET http://127.0.0.1:8080/api/incidentes?estado=RESUELTO`
+
+El endpoint de salud es público. Para consultar incidentes se debe enviar el token:
+
+```powershell
+$env:API_INTERNAL_TOKEN = "un-token-local-largo-y-aleatorio"
+$env:INCIDENTES_API_TOKEN = $env:API_INTERNAL_TOKEN
+$env:INCIDENTES_DATA_SOURCE = "API"
+```
+
+El token compartido es una protección transitoria para el desarrollo local de la
+arquitectura. No reemplaza la autenticación corporativa, no debe incluirse en el
+repositorio y no debe utilizarse para exponer la API en Internet. La instalación
+empresarial deberá usar HTTPS y Corporate ID/SSO (OIDC), con usuarios y roles
+validados por el servidor.
 
 Esta etapa escucha sólo en la computadora local. No se debe cambiar `API_HOST` para exponer el servicio en la red hasta incorporar autenticación y HTTPS.
 
