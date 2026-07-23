@@ -55,6 +55,7 @@ public class Incidente {
             String descripcion,
             Prioridad prioridad,
             String estado,
+            int usuarioId,
             String nombreEmpleado,
             String sector,
             String fecha, LocalDate fechaRegistro, LocalDate fechaEmision, String lugar,
@@ -67,6 +68,7 @@ public class Incidente {
         this.descripcion = descripcion;
         this.prioridad = prioridad;
         this.estado = estado;
+        this.usuarioId = usuarioId;
         this.nombreEmpleado = nombreEmpleado;
         this.sector = sector;
         this.fecha = fecha;

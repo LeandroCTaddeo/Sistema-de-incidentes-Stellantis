@@ -16,6 +16,7 @@
         <javafx.version>21.0.11</javafx.version>
         <postgresql.version>42.7.12</postgresql.version>
         <openpdf.version>2.0.5</openpdf.version>
+        <jackson.version>2.21.4</jackson.version>
     </properties>
 
     <dependencies>
@@ -39,6 +40,16 @@
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
             <version>${openpdf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 
