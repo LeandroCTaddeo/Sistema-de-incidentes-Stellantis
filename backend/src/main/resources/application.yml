@@ -21,6 +21,9 @@ api:
     token: ${API_INTERNAL_TOKEN:}
     user: ${API_INTERNAL_USER:desktop-local}
     role: ${API_INTERNAL_ROLE:ADMIN}
+  storage:
+    root: ${INCIDENTES_FILES_PATH:${user.home}/SistemaIncidentes/imagenes}
+    allow-legacy-absolute-paths: ${INCIDENTES_ALLOW_LEGACY_ABSOLUTE_PATHS:false}
 
 management:
   endpoints:

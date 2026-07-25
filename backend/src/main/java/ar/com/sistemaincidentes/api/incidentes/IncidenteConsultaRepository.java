@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -59,6 +60,14 @@ public class IncidenteConsultaRepository {
                 this::mapear,
                 estado.name()
         );
+    }
+
+    public Optional<IncidenteResponse> buscarPorId(int id) {
+        return jdbcTemplate.query(
+                CONSULTA_BASE + " WHERE i.id = ?",
+                this::mapear,
+                id
+        ).stream().findFirst();
     }
 
     private IncidenteResponse mapear(ResultSet rs, int numeroFila) throws SQLException {

@@ -13,6 +13,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<ApiErrorResponse> recursoNoEncontrado(
+            RecursoNoEncontradoException exception,
+            HttpServletRequest request
+    ) {
+        return respuesta(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> argumentoInvalido(
             IllegalArgumentException exception,

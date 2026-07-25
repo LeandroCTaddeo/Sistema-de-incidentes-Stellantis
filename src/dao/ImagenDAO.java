@@ -10,8 +10,22 @@ import java.util.List;
 import database.Conexion;
 import database.DatabaseException;
 import models.Imagen;
+import api.ExpedienteApiClient;
 
 public class ImagenDAO {
+
+    private ExpedienteApiClient apiClient;
+
+    private boolean usarApiParaLecturas() {
+        return "API".equalsIgnoreCase(
+                System.getenv().getOrDefault("INCIDENTES_DATA_SOURCE", "JDBC")
+        );
+    }
+
+    private ExpedienteApiClient apiClient() {
+        if (apiClient == null) apiClient = new ExpedienteApiClient();
+        return apiClient;
+    }
 
     public void guardar(int incidenteId, String ruta) {
 
@@ -34,6 +48,9 @@ public class ImagenDAO {
     }
 
     public List<Imagen> obtenerPorIncidente(int incidenteId) {
+        if (usarApiParaLecturas()) {
+            return apiClient().listarImagenes(incidenteId);
+        }
 
         List<Imagen> lista = new ArrayList<>();
 

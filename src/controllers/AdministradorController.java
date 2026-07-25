@@ -1,10 +1,12 @@
 package controllers;
 
 import java.io.File;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
 
 import dao.ImagenDAO;
 import dao.IncidenteDAO;
@@ -111,6 +113,7 @@ public class AdministradorController {
             incidentes = dao.buscarResueltos(txtBuscar.getText(), dpDesde.getValue(), dpHasta.getValue());
         } else {
             incidentes = dao.obtenerPendientes();
+            incidentes = filtrarIncidentes(incidentes, txtBuscar.getText());
         }
 
         if (incidentes.isEmpty()) {
@@ -166,6 +169,37 @@ public class AdministradorController {
 
             listaIncidentes.getChildren().add(tarjeta);
         }
+    }
+
+    private List<Incidente> filtrarIncidentes(List<Incidente> incidentes, String texto) {
+        String termino = normalizarBusqueda(texto);
+        if (termino.isBlank()) return incidentes;
+
+        return incidentes.stream()
+                .filter(incidente ->
+                        String.valueOf(incidente.getId()).contains(termino)
+                        || contiene(incidente.getTitulo(), termino)
+                        || contiene(incidente.getNombreEmpleado(), termino)
+                        || contiene(incidente.getNombreApellido(), termino)
+                        || contiene(incidente.getSector(), termino)
+                        || contiene(incidente.getArea(), termino)
+                        || contiene(incidente.getLugar(), termino)
+                        || contiene(incidente.getDescripcion(), termino)
+                )
+                .toList();
+    }
+
+    private boolean contiene(String valor, String termino) {
+        return normalizarBusqueda(valor).contains(termino);
+    }
+
+    private String normalizarBusqueda(String valor) {
+        if (valor == null) return "";
+
+        return Normalizer.normalize(valor, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(Locale.ROOT)
+                .trim();
     }
 
     private String formatearFechaHora(String valor) {

@@ -30,7 +30,7 @@ La aplicación lee su configuración mediante variables de entorno. No se deben 
 | `DB_PASSWORD` | Sí | Contraseña de PostgreSQL. |
 | `DB_URL` | No | URL JDBC. Por defecto: `jdbc:postgresql://localhost:5432/sistema_incidentes`. |
 | `INCIDENTES_FILES_PATH` | No | Carpeta administrada para las imágenes. En desarrollo usa `%USERPROFILE%\SistemaIncidentes\imagenes`. |
-| `INCIDENTES_DATA_SOURCE` | No | `JDBC` por defecto. Usar `API` para probar la lectura de la bandeja mediante el backend. |
+| `INCIDENTES_DATA_SOURCE` | No | `JDBC` por defecto. Usar `API` para leer la bandeja y el expediente mediante el backend. |
 | `INCIDENTES_API_URL` | No | URL del backend. Por defecto: `http://127.0.0.1:8080`. |
 | `INCIDENTES_API_TOKEN` | Sí, en modo `API` | Token interno que debe coincidir con `API_INTERNAL_TOKEN` del backend. |
 
@@ -63,6 +63,8 @@ Variables utilizadas por el backend:
 | `API_INTERNAL_TOKEN` | Sí | Token interno exigido por los endpoints protegidos. No debe guardarse en Git. |
 | `API_INTERNAL_USER` | No | Identidad técnica asociada al token. Por defecto: `desktop-local`. |
 | `API_INTERNAL_ROLE` | No | Rol técnico asociado al token. Por defecto: `ADMIN`. |
+| `INCIDENTES_FILES_PATH` | No | Carpeta administrada desde la que el servidor entrega las imágenes. |
+| `INCIDENTES_ALLOW_LEGACY_ABSOLUTE_PATHS` | No | Compatibilidad temporal con rutas absolutas antiguas. Por seguridad, el valor predeterminado es `false`. |
 
 Compilar y ejecutar la API desde la raíz del repositorio:
 
@@ -77,6 +79,10 @@ Endpoints iniciales:
 - `GET http://127.0.0.1:8080/api/incidentes`
 - `GET http://127.0.0.1:8080/api/incidentes?estado=PENDIENTE`
 - `GET http://127.0.0.1:8080/api/incidentes?estado=RESUELTO`
+- `GET http://127.0.0.1:8080/api/incidentes/{id}`
+- `GET http://127.0.0.1:8080/api/incidentes/{id}/boletines`
+- `GET http://127.0.0.1:8080/api/incidentes/{id}/imagenes`
+- `GET http://127.0.0.1:8080/api/incidentes/{id}/imagenes/{imagenId}/contenido`
 
 El endpoint de salud es público. Para consultar incidentes se debe enviar el token:
 
@@ -94,7 +100,9 @@ validados por el servidor.
 
 Esta etapa escucha sólo en la computadora local. No se debe cambiar `API_HOST` para exponer el servicio en la red hasta incorporar autenticación y HTTPS.
 
-Para probar la bandeja administrativa a través de la API, primero se inicia el backend y luego se ejecuta JavaFX con `INCIDENTES_DATA_SOURCE=API`. Las escrituras y las funciones que todavía no fueron migradas continúan usando JDBC durante esta transición.
+Para probar la bandeja y la lectura del expediente administrativo a través de la API, primero se inicia el backend y luego se ejecuta JavaFX con `INCIDENTES_DATA_SOURCE=API`. El cliente descarga las imágenes autorizadas a una carpeta temporal de la sesión, sin recibir ni conocer su ruta física en el servidor. Las escrituras y las funciones que todavía no fueron migradas continúan usando JDBC durante esta transición.
+
+Las imágenes administradas deben guardarse dentro de `INCIDENTES_FILES_PATH`. La compatibilidad con rutas absolutas antiguas sólo debe habilitarse de manera temporal durante una migración controlada; no se recomienda para una instalación nueva.
 
 ## Arquitectura actual
 
