@@ -6,8 +6,22 @@ import java.util.List;
 
 import database.Conexion;
 import models.BoletinAdmin;
+import api.ExpedienteApiClient;
 
 public class BoletinAdminDAO {
+
+    private ExpedienteApiClient apiClient;
+
+    private boolean usarApiParaLecturas() {
+        return "API".equalsIgnoreCase(
+                System.getenv().getOrDefault("INCIDENTES_DATA_SOURCE", "JDBC")
+        );
+    }
+
+    private ExpedienteApiClient apiClient() {
+        if (apiClient == null) apiClient = new ExpedienteApiClient();
+        return apiClient;
+    }
 
     public int guardar(BoletinAdmin b) {
         String sql = """
@@ -103,6 +117,10 @@ public class BoletinAdminDAO {
     }
 
     public List<BoletinAdmin> obtenerPorIncidente(int incidenteId) {
+        if (usarApiParaLecturas()) {
+            return apiClient().listarBoletines(incidenteId);
+        }
+
         List<BoletinAdmin> boletines = new ArrayList<>();
 
         String sql = """
