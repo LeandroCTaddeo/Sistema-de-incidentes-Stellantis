@@ -28,6 +28,7 @@ import models.Usuario;
 import models.Imagen;
 import services.PDFService;
 import services.VisorImagenService;
+import api.IncidenteApiException;
 
 public class DetalleCasoAdminController {
 
@@ -327,8 +328,13 @@ public class DetalleCasoAdminController {
         Optional<ButtonType> respuesta = confirmacion.showAndWait();
         if (respuesta.isEmpty() || respuesta.get() != ButtonType.OK) return;
 
-        if (!incidenteDAO.resolver(incidenteActual.getId(), usuarioActual.getId())) {
-            mostrarError("No se pudo resolver el expediente o ya estaba resuelto.");
+        try {
+            if (!incidenteDAO.resolver(incidenteActual.getId(), usuarioActual.getId())) {
+                mostrarError("No se pudo resolver el expediente o ya estaba resuelto.");
+                return;
+            }
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
             return;
         }
 

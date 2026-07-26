@@ -61,6 +61,14 @@ public class ApiExceptionHandler {
         return respuesta(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(ConflictoOperacionException.class)
+    public ResponseEntity<ApiErrorResponse> conflictoOperacion(
+            ConflictoOperacionException exception,
+            HttpServletRequest request
+    ) {
+        return respuesta(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> argumentoInvalido(
             IllegalArgumentException exception,
