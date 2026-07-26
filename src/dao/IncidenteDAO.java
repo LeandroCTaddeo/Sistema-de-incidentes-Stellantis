@@ -14,11 +14,13 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 
 import api.IncidenteApiClient;
+import api.AdministracionApiClient;
 import models.Prioridad;
 
 public class IncidenteDAO {
 
 	private IncidenteApiClient apiClient;
+	private AdministracionApiClient administracionApiClient;
 
 	private boolean usarApiParaLecturas() {
 		return "API".equalsIgnoreCase(
@@ -31,6 +33,13 @@ public class IncidenteDAO {
 			apiClient = new IncidenteApiClient();
 		}
 		return apiClient;
+	}
+
+	private AdministracionApiClient administracionApiClient() {
+		if (administracionApiClient == null) {
+			administracionApiClient = new AdministracionApiClient();
+		}
+		return administracionApiClient;
 	}
 
 	public int guardar(Incidente incidente) {
@@ -233,6 +242,9 @@ public class IncidenteDAO {
 	}
 	
 	public boolean resolver(int id, int administradorId) {
+		if (usarApiParaLecturas()) {
+			return administracionApiClient().resolverIncidente(id, administradorId);
+		}
 
 	    String sql = """
 	            UPDATE incidentes

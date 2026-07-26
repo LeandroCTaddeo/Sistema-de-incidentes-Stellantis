@@ -6,11 +6,13 @@ import java.util.List;
 
 import database.Conexion;
 import models.BoletinAdmin;
+import api.AdministracionApiClient;
 import api.ExpedienteApiClient;
 
 public class BoletinAdminDAO {
 
     private ExpedienteApiClient apiClient;
+    private AdministracionApiClient administracionApiClient;
 
     private boolean usarApiParaLecturas() {
         return "API".equalsIgnoreCase(
@@ -23,7 +25,18 @@ public class BoletinAdminDAO {
         return apiClient;
     }
 
+    private AdministracionApiClient administracionApiClient() {
+        if (administracionApiClient == null) {
+            administracionApiClient = new AdministracionApiClient();
+        }
+        return administracionApiClient;
+    }
+
     public int guardar(BoletinAdmin b) {
+        if (usarApiParaLecturas()) {
+            return administracionApiClient().crearBoletin(b);
+        }
+
         String sql = """
             INSERT INTO boletines_admin
             (
@@ -71,6 +84,11 @@ public class BoletinAdminDAO {
     }
 
     public void actualizar(BoletinAdmin b) {
+        if (usarApiParaLecturas()) {
+            administracionApiClient().actualizarBoletin(b);
+            return;
+        }
+
         String sql = """
             UPDATE boletines_admin
             SET titulo = ?,

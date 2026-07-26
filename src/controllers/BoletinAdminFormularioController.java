@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import models.BoletinAdmin;
+import api.IncidenteApiException;
 
 public class BoletinAdminFormularioController {
 
@@ -97,17 +98,22 @@ public class BoletinAdminFormularioController {
         boletin.setHistorial(txtHistorial.getText().trim());
         boletin.setPrioridad(cmbPrioridad.getValue().toUpperCase());
 
-        if (boletin.getId() == 0) {
-            int id = boletinDAO.guardar(boletin);
+        try {
+            if (boletin.getId() == 0) {
+                int id = boletinDAO.guardar(boletin);
 
-            if (id == -1) {
-                mostrarError("No se pudo guardar el boletín.");
-                return;
+                if (id == -1) {
+                    mostrarError("No se pudo guardar el boletín.");
+                    return;
+                }
+
+                boletin.setId(id);
+            } else {
+                boletinDAO.actualizar(boletin);
             }
-
-            boletin.setId(id);
-        } else {
-            boletinDAO.actualizar(boletin);
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
+            return;
         }
 
         guardado = true;
