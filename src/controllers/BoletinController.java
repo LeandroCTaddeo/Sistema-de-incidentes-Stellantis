@@ -38,6 +38,7 @@ public class BoletinController {
 
 	private static final DateTimeFormatter FORMATO_FECHA =
 			DateTimeFormatter.ofPattern("dd/MM/yyyy");
+	private static final int MAXIMO_IMAGENES = 10;
 
 	private IncidenteService incidenteService = new IncidenteService();
 	private List<File> imagenesSeleccionadas = new ArrayList<>();
@@ -202,6 +203,15 @@ public class BoletinController {
 
 		if (nuevasImagenes == null) return;
 
+		long cantidadNuevas = nuevasImagenes.stream()
+				.filter(archivo -> !imagenesSeleccionadas.contains(archivo))
+				.count();
+		if (imagenesSeleccionadas.size() + cantidadNuevas > MAXIMO_IMAGENES) {
+			mostrarError("Se permiten como máximo " + MAXIMO_IMAGENES
+					+ " imágenes por incidente.");
+			return;
+		}
+
 		for (File archivo : nuevasImagenes) {
 			if (!imagenesSeleccionadas.contains(archivo)) {
 				imagenesSeleccionadas.add(archivo);
@@ -249,27 +259,41 @@ public class BoletinController {
 				txtHistorial.getText().trim()
 				);
 
-		int idIncidente = incidenteService.guardar(incidente);
+		boolean envioPorApi = incidenteService.usarApiParaEscrituras();
+		int idIncidente;
+		try {
+			idIncidente = envioPorApi
+					? incidenteService.guardarConImagenes(incidente, imagenesSeleccionadas)
+					: incidenteService.guardar(incidente);
+		} catch (RuntimeException e) {
+			mostrarError(e.getMessage() == null
+					? "No se pudo enviar el incidente."
+					: e.getMessage());
+			return;
+		}
+
 		if (idIncidente <= 0) {
 			mostrarError("No se pudo guardar el incidente. Inténtelo nuevamente.");
 			return;
 		}
 
 		List<String> imagenesNoGuardadas = new ArrayList<>();
-		for (File archivo : imagenesSeleccionadas) {
-			String claveAlmacenada = null;
-			try {
-				claveAlmacenada = almacenamientoImagenes.almacenar(archivo, idIncidente);
-				imagenDAO.guardar(idIncidente, claveAlmacenada);
-			} catch (RuntimeException e) {
-				if (claveAlmacenada != null) {
-					try {
-						almacenamientoImagenes.eliminar(claveAlmacenada);
-					} catch (StorageException ignored) {
-						// La limpieza no debe ocultar el error original.
+		if (!envioPorApi) {
+			for (File archivo : imagenesSeleccionadas) {
+				String claveAlmacenada = null;
+				try {
+					claveAlmacenada = almacenamientoImagenes.almacenar(archivo, idIncidente);
+					imagenDAO.guardar(idIncidente, claveAlmacenada);
+				} catch (RuntimeException e) {
+					if (claveAlmacenada != null) {
+						try {
+							almacenamientoImagenes.eliminar(claveAlmacenada);
+						} catch (StorageException ignored) {
+							// La limpieza no debe ocultar el error original.
+						}
 					}
+					imagenesNoGuardadas.add(archivo.getName());
 				}
-				imagenesNoGuardadas.add(archivo.getName());
 			}
 		}
 

@@ -7,11 +7,51 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> validacionInvalida(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        String mensaje = exception.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(this::mensajeValidacion)
+                .orElse("Los datos enviados no son válidos.");
+        return respuesta(HttpStatus.BAD_REQUEST, mensaje, request.getRequestURI());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> contenidoInvalido(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request
+    ) {
+        return respuesta(
+                HttpStatus.BAD_REQUEST,
+                "El contenido del boletín no tiene un formato válido.",
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> cargaDemasiadoGrande(
+            MaxUploadSizeExceededException exception,
+            HttpServletRequest request
+    ) {
+        return respuesta(
+                HttpStatus.PAYLOAD_TOO_LARGE,
+                "Las imágenes adjuntas superan el tamaño máximo permitido.",
+                request.getRequestURI()
+        );
+    }
 
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ResponseEntity<ApiErrorResponse> recursoNoEncontrado(
@@ -54,6 +94,13 @@ public class ApiExceptionHandler {
                 ruta
         );
         return ResponseEntity.status(estado).body(cuerpo);
+    }
+
+    private String mensajeValidacion(FieldError error) {
+        return "El campo '" + error.getField() + "' "
+                + (error.getDefaultMessage() == null
+                        ? "no es válido."
+                        : error.getDefaultMessage() + ".");
     }
 
     public record ApiErrorResponse(

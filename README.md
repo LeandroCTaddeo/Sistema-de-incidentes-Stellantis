@@ -65,6 +65,10 @@ Variables utilizadas por el backend:
 | `API_INTERNAL_ROLE` | No | Rol técnico asociado al token. Por defecto: `ADMIN`. |
 | `INCIDENTES_FILES_PATH` | No | Carpeta administrada desde la que el servidor entrega las imágenes. |
 | `INCIDENTES_ALLOW_LEGACY_ABSOLUTE_PATHS` | No | Compatibilidad temporal con rutas absolutas antiguas. Por seguridad, el valor predeterminado es `false`. |
+| `INCIDENTES_MAX_IMAGES` | No | Cantidad máxima de imágenes por incidente. Por defecto: `10`. |
+| `INCIDENTES_MAX_IMAGE_BYTES` | No | Tamaño máximo de cada imagen en bytes. Por defecto: `10485760` (10 MB). |
+| `INCIDENTES_MAX_IMAGE_DIMENSION` | No | Máximo permitido para ancho o alto de una imagen. Por defecto: `12000`. |
+| `INCIDENTES_MAX_REQUEST_SIZE` | No | Tamaño máximo de la solicitud multipart. Por defecto: `50MB`. |
 
 Compilar y ejecutar la API desde la raíz del repositorio:
 
@@ -83,6 +87,7 @@ Endpoints iniciales:
 - `GET http://127.0.0.1:8080/api/incidentes/{id}/boletines`
 - `GET http://127.0.0.1:8080/api/incidentes/{id}/imagenes`
 - `GET http://127.0.0.1:8080/api/incidentes/{id}/imagenes/{imagenId}/contenido`
+- `POST http://127.0.0.1:8080/api/incidentes`
 
 El endpoint de salud es público. Para consultar incidentes se debe enviar el token:
 
@@ -100,7 +105,11 @@ validados por el servidor.
 
 Esta etapa escucha sólo en la computadora local. No se debe cambiar `API_HOST` para exponer el servicio en la red hasta incorporar autenticación y HTTPS.
 
-Para probar la bandeja y la lectura del expediente administrativo a través de la API, primero se inicia el backend y luego se ejecuta JavaFX con `INCIDENTES_DATA_SOURCE=API`. El cliente descarga las imágenes autorizadas a una carpeta temporal de la sesión, sin recibir ni conocer su ruta física en el servidor. Las escrituras y las funciones que todavía no fueron migradas continúan usando JDBC durante esta transición.
+Para probar la bandeja, la lectura del expediente y el envío del boletín del empleado a través de la API, primero se inicia el backend y luego se ejecuta JavaFX con `INCIDENTES_DATA_SOURCE=API`. El envío utiliza una solicitud multipart que incluye el boletín y todas sus imágenes. El backend valida los campos, el usuario, el contenido real de las imágenes y sus límites antes de completar la operación.
+
+El cliente descarga las imágenes autorizadas a una carpeta temporal de la sesión, sin recibir ni conocer su ruta física en el servidor. La creación de boletines internos, la resolución y las funciones que todavía no fueron migradas continúan usando JDBC durante esta transición.
+
+La creación del incidente y el registro de sus imágenes se ejecutan dentro de una transacción. Si falla la base de datos o el almacenamiento, se revierte la operación y se eliminan los archivos parciales.
 
 Las imágenes administradas deben guardarse dentro de `INCIDENTES_FILES_PATH`. La compatibilidad con rutas absolutas antiguas sólo debe habilitarse de manera temporal durante una migración controlada; no se recomienda para una instalación nueva.
 
