@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 
 import ar.com.sistemaincidentes.api.health.HealthController;
+import ar.com.sistemaincidentes.api.incidentes.IncidenteCreacionService;
 import ar.com.sistemaincidentes.api.incidentes.IncidenteConsultaService;
 import ar.com.sistemaincidentes.api.incidentes.IncidenteController;
 
@@ -36,6 +37,9 @@ class ApiSecurityIntegrationTest {
 
     @MockitoBean
     private IncidenteConsultaService service;
+
+    @MockitoBean
+    private IncidenteCreacionService creacionService;
 
     @Test
     void permiteConsultarLaSaludSinToken() throws Exception {

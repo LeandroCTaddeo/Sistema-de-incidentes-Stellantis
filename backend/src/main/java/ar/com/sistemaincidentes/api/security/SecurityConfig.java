@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,6 +42,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(autorizacion -> autorizacion
                         .requestMatchers("/api/health", "/actuator/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/incidentes")
+                        .hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers("/api/incidentes/**").hasRole("ADMIN")
                         .anyRequest().denyAll())
                 .exceptionHandling(excepciones -> excepciones
