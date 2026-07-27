@@ -1,6 +1,7 @@
 .admin-root,
 .case-root,
-.reports-root {
+.reports-root,
+.users-root {
     -fx-font-family: "Segoe UI", Arial, sans-serif;
     -fx-font-size: 13px;
     -fx-background-color: #F4F5F7;
@@ -349,4 +350,61 @@
     -fx-padding: 14;
     -fx-border-color: #E2E4E8;
     -fx-border-width: 1 0 0 0;
+}
+
+.status-assigned {
+    -fx-text-fill: #243782;
+    -fx-font-weight: 700;
+}
+
+.users-content {
+    -fx-padding: 22;
+    -fx-background-color: #F4F5F7;
+}
+
+.users-table-card,
+.users-form-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 10;
+    -fx-border-color: #E2E4E8;
+    -fx-border-radius: 10;
+    -fx-padding: 20;
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #00133B;
+}
+
+.table-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E4E8;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #F4F5F7;
+}
+
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #E2E4E8 transparent;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #E8ECFA;
+    -fx-text-background-color: #00133B;
+}
+
+.status-active {
+    -fx-text-fill: #107C41;
+    -fx-font-weight: 700;
+}
+
+.status-inactive {
+    -fx-text-fill: #A80000;
+    -fx-font-weight: 700;
 }

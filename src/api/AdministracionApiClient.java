@@ -85,6 +85,30 @@ public class AdministracionApiClient {
         return response.id() == incidenteId && "RESUELTO".equalsIgnoreCase(response.estado());
     }
 
+    public AsignacionIncidenteApiResponse tomarIncidente(int incidenteId, int administradorId) {
+        validarId(incidenteId, "incidente");
+        validarId(administradorId, "administrador");
+        return enviarJson(
+                "/api/incidentes/" + incidenteId + "/asignacion",
+                "POST",
+                new AsignacionIncidenteApiRequest(administradorId),
+                200,
+                AsignacionIncidenteApiResponse.class
+        );
+    }
+
+    public AsignacionIncidenteApiResponse liberarIncidente(int incidenteId, int administradorId) {
+        validarId(incidenteId, "incidente");
+        validarId(administradorId, "administrador");
+        return enviarJson(
+                "/api/incidentes/" + incidenteId + "/asignacion",
+                "DELETE",
+                new AsignacionIncidenteApiRequest(administradorId),
+                200,
+                AsignacionIncidenteApiResponse.class
+        );
+    }
+
     private <T> T enviarJson(
             String ruta,
             String metodo,

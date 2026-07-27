@@ -22,6 +22,7 @@ class OperacionAdminServiceTest {
         OperacionAdminService service = new OperacionAdminService(repository);
         when(repository.existeAdministrador(2)).thenReturn(true);
         when(repository.obtenerEstadoIncidente(5)).thenReturn("PENDIENTE");
+        when(repository.obtenerResponsable(5)).thenReturn(2);
         when(repository.insertarBoletin(5, solicitud())).thenReturn(18);
 
         BoletinAdminGuardadoResponse response = service.crearBoletin(5, solicitud());
@@ -35,6 +36,7 @@ class OperacionAdminServiceTest {
         OperacionAdminService service = new OperacionAdminService(repository);
         when(repository.existeAdministrador(2)).thenReturn(true);
         when(repository.obtenerEstadoIncidente(5)).thenReturn("PENDIENTE");
+        when(repository.obtenerResponsable(5)).thenReturn(2);
         when(repository.actualizarBoletin(5, 18, solicitud())).thenReturn(true);
 
         BoletinAdminGuardadoResponse response =
@@ -62,6 +64,7 @@ class OperacionAdminServiceTest {
         OperacionAdminService service = new OperacionAdminService(repository);
         when(repository.existeAdministrador(2)).thenReturn(true);
         when(repository.obtenerEstadoIncidente(5)).thenReturn("PENDIENTE");
+        when(repository.obtenerResponsable(5)).thenReturn(2);
         when(repository.resolverIncidente(5, 2)).thenReturn(true);
 
         IncidenteResueltoResponse response =
@@ -80,6 +83,39 @@ class OperacionAdminServiceTest {
 
         assertThatThrownBy(() -> service.resolver(99, new ResolucionIncidenteRequest(2)))
                 .isInstanceOf(RecursoNoEncontradoException.class);
+    }
+
+    @Test
+    void tomaUnCasoLibreYRegistraAuditoria() {
+        OperacionAdminRepository repository = mock(OperacionAdminRepository.class);
+        OperacionAdminService service = new OperacionAdminService(repository);
+        when(repository.existeAdministrador(2)).thenReturn(true);
+        when(repository.obtenerEstadoIncidente(5)).thenReturn("PENDIENTE");
+        when(repository.tomarIncidente(5, 2)).thenReturn(true);
+        when(repository.obtenerAsignacion(5)).thenReturn(java.util.Optional.of(
+                new AsignacionIncidenteResponse(5, 2, "Ana Admin", null)
+        ));
+
+        AsignacionIncidenteResponse response = service.tomar(
+                5, new AsignacionIncidenteRequest(2)
+        );
+
+        assertThat(response.administradorId()).isEqualTo(2);
+        verify(repository).registrarAsignacion(5, 2, "TOMADO");
+    }
+
+    @Test
+    void rechazaResolverUnCasoAsignadoAOtroAdministrador() {
+        OperacionAdminRepository repository = mock(OperacionAdminRepository.class);
+        OperacionAdminService service = new OperacionAdminService(repository);
+        when(repository.existeAdministrador(2)).thenReturn(true);
+        when(repository.obtenerEstadoIncidente(5)).thenReturn("PENDIENTE");
+        when(repository.obtenerResponsable(5)).thenReturn(3);
+
+        assertThatThrownBy(() -> service.resolver(5, new ResolucionIncidenteRequest(2)))
+                .isInstanceOf(ConflictoOperacionException.class)
+                .hasMessageContaining("responsable");
+        verify(repository, never()).resolverIncidente(5, 2);
     }
 
     private BoletinAdminEscrituraRequest solicitud() {

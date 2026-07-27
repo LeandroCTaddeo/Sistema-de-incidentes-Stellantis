@@ -5,12 +5,14 @@ Aplicación de escritorio interna para registrar, investigar y cerrar incidentes
 ## Funcionalidades principales
 
 - Formulario de boletín de ocurrencia para empleados.
-- Bandeja de incidentes pendientes para administradores.
+- Bandeja de incidentes pendientes con responsable visible.
+- Asignación atómica de casos y sección personal "Mis casos".
 - Expediente con boletín original y boletines internos.
 - Resolución y búsqueda histórica de casos.
 - Exportación del expediente completo a PDF.
 - Visualización y descarga de imágenes adjuntas.
 - Reportes por período, estado, prioridad y área o sector.
+- Gestión de administradores, estados de acceso y carga de trabajo.
 
 ## Arquitectura actual
 
@@ -99,12 +101,18 @@ Principales recursos disponibles:
 
 - `GET /api/health`
 - `GET /api/usuarios/actual`
+- `GET /api/usuarios`
+- `POST /api/usuarios`
+- `PUT /api/usuarios/{id}`
+- `PATCH /api/usuarios/{id}/estado`
 - `GET /api/incidentes`
 - `POST /api/incidentes`
 - `GET /api/incidentes/{id}`
 - `GET /api/incidentes/{id}/boletines`
 - `POST /api/incidentes/{id}/boletines`
 - `PUT /api/incidentes/{id}/boletines/{boletinId}`
+- `POST /api/incidentes/{id}/asignacion`
+- `DELETE /api/incidentes/{id}/asignacion`
 - `GET /api/incidentes/{id}/imagenes`
 - `GET /api/incidentes/{id}/imagenes/{imagenId}/contenido`
 - `PATCH /api/incidentes/{id}/resolucion`
@@ -116,7 +124,7 @@ Las imágenes consultadas se descargan a una caché temporal de la sesión. El c
 
 ## Base de datos
 
-Las migraciones SQL versionadas se encuentran en `database/migrations`. Deben aplicarse de manera controlada y conservarse en el historial del repositorio.
+Las migraciones SQL versionadas se encuentran en `database/migrations`. Deben aplicarse de manera controlada y conservarse en el historial del repositorio. Para esta funcionalidad se deben aplicar, en orden, `V5__gestion_usuarios.sql` y `V6__asignacion_incidentes.sql`.
 
 ## Seguridad
 

@@ -52,7 +52,14 @@ public class IncidenteApiClient {
     }
 
     public List<Incidente> listar(String estado) {
-        return consultar(crearUri(estado, null, null, null));
+        return consultar(crearUri(estado, null, null, null, null));
+    }
+
+    public List<Incidente> listarAsignados(String estado, int administradorId) {
+        if (administradorId <= 0) {
+            throw new IncidenteApiException("El administrador asignado no es válido.");
+        }
+        return consultar(crearUri(estado, null, null, null, administradorId));
     }
 
     public List<Incidente> buscarResueltos(
@@ -60,7 +67,7 @@ public class IncidenteApiClient {
             LocalDate desde,
             LocalDate hasta
     ) {
-        return consultar(crearUri("RESUELTO", texto, desde, hasta));
+        return consultar(crearUri("RESUELTO", texto, desde, hasta, null));
     }
 
     private List<Incidente> consultar(URI uri) {
@@ -237,7 +244,8 @@ public class IncidenteApiClient {
             String estado,
             String texto,
             LocalDate desde,
-            LocalDate hasta
+            LocalDate hasta,
+            Integer asignadoA
     ) {
         String ruta = urlBase + "/api/incidentes";
         List<String> parametros = new ArrayList<>();
@@ -245,6 +253,7 @@ public class IncidenteApiClient {
         agregarParametro(parametros, "texto", texto);
         agregarParametro(parametros, "desde", desde == null ? null : desde.toString());
         agregarParametro(parametros, "hasta", hasta == null ? null : hasta.toString());
+        agregarParametro(parametros, "asignadoA", asignadoA == null ? null : asignadoA.toString());
 
         return URI.create(parametros.isEmpty() ? ruta : ruta + "?" + String.join("&", parametros));
     }

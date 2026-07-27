@@ -29,6 +29,7 @@ import models.Imagen;
 import services.PDFService;
 import services.VisorImagenService;
 import api.IncidenteApiException;
+import api.AsignacionIncidenteApiResponse;
 
 public class DetalleCasoAdminController {
 
@@ -40,6 +41,9 @@ public class DetalleCasoAdminController {
     @FXML private Button btnBoletinOriginal;
     @FXML private Button btnExportar;
     @FXML private Button btnResolver;
+    @FXML private Button btnTomarCaso;
+    @FXML private Button btnLiberarCaso;
+    @FXML private Label lblResponsableCaso;
 
     @FXML private Label lblTituloCaso;
     @FXML private VBox contenedorBoletines;
@@ -48,6 +52,7 @@ public class DetalleCasoAdminController {
     private Incidente incidenteActual;
     private Usuario usuarioActual;
     private Runnable onCasoResuelto;
+    private Runnable onAsignacionCambiada;
 
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
     private final BoletinAdminDAO boletinAdminDAO = new BoletinAdminDAO();
@@ -68,6 +73,8 @@ public class DetalleCasoAdminController {
         btnNuevoBoletin.setOnAction(e -> crearNuevoBoletin());
         btnExportar.setOnAction(e -> exportarPDF());
         btnResolver.setOnAction(e -> resolverCaso());
+        btnTomarCaso.setOnAction(e -> tomarCaso());
+        btnLiberarCaso.setOnAction(e -> liberarCaso());
     }
 
     public void cargarIncidente(Incidente incidente) {
@@ -82,6 +89,10 @@ public class DetalleCasoAdminController {
 
     public void setOnCasoResuelto(Runnable onCasoResuelto) {
         this.onCasoResuelto = onCasoResuelto;
+    }
+
+    public void setOnAsignacionCambiada(Runnable onAsignacionCambiada) {
+        this.onAsignacionCambiada = onAsignacionCambiada;
     }
 
     private void mostrarVistaPreviaOriginal() {
@@ -222,7 +233,7 @@ public class DetalleCasoAdminController {
 
             boton.setOnAction(e -> mostrarVistaPreviaBoletin(boletin));
             boton.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2 && !estaResuelto()) {
+                if (e.getClickCount() == 2 && !estaResuelto() && esResponsableActual()) {
                     abrirFormularioBoletin(boletin);
                 }
             });
@@ -254,7 +265,7 @@ public class DetalleCasoAdminController {
     }
 
     private void crearNuevoBoletin() {
-        if (incidenteActual == null || estaResuelto()) return;
+        if (incidenteActual == null || estaResuelto() || !esResponsableActual()) return;
 
         BoletinAdmin boletin = new BoletinAdmin();
         boletin.setIncidenteId(incidenteActual.getId());
@@ -350,11 +361,59 @@ public class DetalleCasoAdminController {
         return incidenteActual != null && "RESUELTO".equalsIgnoreCase(incidenteActual.getEstado());
     }
 
+    private boolean esResponsableActual() {
+        return incidenteActual != null
+                && usuarioActual != null
+                && incidenteActual.estaAsignadoA(usuarioActual.getId());
+    }
+
+    private void tomarCaso() {
+        if (incidenteActual == null || incidenteActual.getAsignadoA() != null || estaResuelto()) return;
+        try {
+            AsignacionIncidenteApiResponse asignacion = incidenteDAO.tomar(
+                    incidenteActual.getId(), usuarioActual.getId()
+            );
+            incidenteActual.asignarA(
+                    asignacion.administradorId(),
+                    asignacion.nombreResponsable(),
+                    asignacion.fechaAsignacion()
+            );
+            actualizarEstadoControles();
+            if (onAsignacionCambiada != null) onAsignacionCambiada.run();
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
+        }
+    }
+
+    private void liberarCaso() {
+        if (!esResponsableActual() || estaResuelto()) return;
+        try {
+            incidenteDAO.liberar(incidenteActual.getId(), usuarioActual.getId());
+            incidenteActual.liberarAsignacion();
+            actualizarEstadoControles();
+            if (onAsignacionCambiada != null) onAsignacionCambiada.run();
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
+        }
+    }
+
     private void actualizarEstadoControles() {
         boolean resuelto = estaResuelto();
-        btnNuevoBoletin.setDisable(resuelto);
-        btnResolver.setDisable(resuelto);
+        boolean responsable = esResponsableActual();
+        boolean sinResponsable = !resuelto && incidenteActual != null
+                && incidenteActual.getAsignadoA() == null;
+        btnNuevoBoletin.setDisable(resuelto || !responsable);
+        btnResolver.setDisable(resuelto || !responsable);
         btnResolver.setText(resuelto ? "Caso resuelto" : "Resolver caso");
+        btnTomarCaso.setVisible(sinResponsable);
+        btnTomarCaso.setManaged(sinResponsable);
+        btnLiberarCaso.setVisible(responsable && !resuelto);
+        btnLiberarCaso.setManaged(responsable && !resuelto);
+        lblResponsableCaso.setText(resuelto
+                ? "Caso resuelto"
+                : incidenteActual.getAsignadoA() == null
+                        ? "Sin responsable"
+                        : "A cargo de " + incidenteActual.getNombreResponsable());
     }
 
     private String valor(String texto) {

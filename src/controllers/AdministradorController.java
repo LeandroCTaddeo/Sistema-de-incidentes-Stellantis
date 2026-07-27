@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import dao.ImagenDAO;
 import dao.IncidenteDAO;
+import dao.UsuarioDAO;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -26,6 +27,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import models.Imagen;
 import models.Incidente;
+import models.Usuario;
+import api.AsignacionIncidenteApiResponse;
+import api.IncidenteApiException;
+import services.PDFService;
 import services.VisorImagenService;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -49,8 +54,14 @@ public class AdministradorController {
     @FXML private Button btnResolver;
     @FXML private Button btnExportar;
     @FXML private Button btnBandeja;
-    @FXML private Button btnMisIncidentes;
+    @FXML private Button btnMisCasos;
+    @FXML private Button btnHistorial;
     @FXML private Button btnReportes;
+    @FXML private Button btnUsuarios;
+    @FXML private Button btnTomarCaso;
+    @FXML private Button btnLiberarCaso;
+    @FXML private Label lblResponsable;
+    @FXML private Label lblUsuarioActual;
     @FXML private Label lblSeccion;
     @FXML private TextField txtBuscar;
     @FXML private DatePicker dpDesde;
@@ -58,21 +69,35 @@ public class AdministradorController {
     @FXML private HBox filtrosFechas;
 
     private Incidente incidenteSeleccionado;
-    private boolean modoHistorico;
+    private Vista vista = Vista.BANDEJA;
     private VBox tarjetaSeleccionada;
+    private Usuario usuarioActual;
 
     private IncidenteDAO dao = new IncidenteDAO();
     private ImagenDAO imagenDAO = new ImagenDAO();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+    private final PDFService pdfService = new PDFService();
+
+    private enum Vista { BANDEJA, MIS_CASOS, HISTORIAL }
 
     @FXML
     public void initialize() {
+        usuarioActual = usuarioDAO.obtenerUsuarioActual();
+        lblUsuarioActual.setText(usuarioActual.getNombre());
         btnBandeja.setOnAction(e -> mostrarBandeja());
-        btnMisIncidentes.setOnAction(e -> mostrarMisIncidentes());
+        btnMisCasos.setOnAction(e -> mostrarMisCasos());
+        btnHistorial.setOnAction(e -> mostrarHistorial());
         btnReportes.setOnAction(e -> abrirReportes());
+        btnUsuarios.setOnAction(e -> abrirUsuarios());
+        btnTomarCaso.setOnAction(e -> tomarCaso());
+        btnLiberarCaso.setOnAction(e -> liberarCaso());
+        btnResolver.setOnAction(e -> resolverSeleccionado());
+        btnExportar.setOnAction(e -> exportarSeleccionado());
         txtBuscar.textProperty().addListener((obs, anterior, actual) -> cargarLista());
         dpDesde.valueProperty().addListener((obs, anterior, actual) -> cargarLista());
         dpHasta.valueProperty().addListener((obs, anterior, actual) -> cargarLista());
         configurarDesenfoqueAlHacerClick();
+        limpiarDetalle();
         cargarLista();
     }
 
@@ -104,22 +129,27 @@ public class AdministradorController {
         listaIncidentes.getChildren().clear();
 
         List<Incidente> incidentes;
-        if (modoHistorico) {
+        if (vista == Vista.HISTORIAL) {
             if (dpDesde.getValue() != null && dpHasta.getValue() != null
                     && dpDesde.getValue().isAfter(dpHasta.getValue())) {
                 mostrarError("La fecha desde no puede ser posterior a la fecha hasta.");
                 return;
             }
             incidentes = dao.buscarResueltos(txtBuscar.getText(), dpDesde.getValue(), dpHasta.getValue());
+        } else if (vista == Vista.MIS_CASOS) {
+            incidentes = dao.obtenerAsignados(usuarioActual.getId());
+            incidentes = filtrarIncidentes(incidentes, txtBuscar.getText());
         } else {
             incidentes = dao.obtenerPendientes();
             incidentes = filtrarIncidentes(incidentes, txtBuscar.getText());
         }
 
         if (incidentes.isEmpty()) {
-            Label vacio = new Label(modoHistorico
+            Label vacio = new Label(vista == Vista.HISTORIAL
                     ? "No se encontraron incidentes resueltos."
-                    : "No hay incidentes pendientes.");
+                    : vista == Vista.MIS_CASOS
+                            ? "No tenés casos asignados actualmente."
+                            : "No hay incidentes pendientes.");
             vacio.getStyleClass().add("empty-state");
             listaIncidentes.getChildren().add(vacio);
             return;
@@ -137,7 +167,7 @@ public class AdministradorController {
             Label empleado = new Label("👤 " + incidente.getNombreEmpleado());
             empleado.getStyleClass().add("card-meta");
             String textoFecha = formatearFechaHora(incidente.getFecha());
-            if (modoHistorico && incidente.getFechaResolucion() != null) {
+            if (vista == Vista.HISTORIAL && incidente.getFechaResolucion() != null) {
                 textoFecha = "Resuelto: " + incidente.getFechaResolucion()
                         .format(FORMATO_FECHA_HORA);
             }
@@ -149,8 +179,13 @@ public class AdministradorController {
             Label estado = new Label();
 
             if (incidente.getEstado().equals("PENDIENTE")) {
-                estado.setText("🔴 PENDIENTE");
-                estado.getStyleClass().add("status-pending");
+                if (incidente.getAsignadoA() == null) {
+                    estado.setText("🔴 SIN RESPONSABLE");
+                    estado.getStyleClass().add("status-pending");
+                } else {
+                    estado.setText("🔵 A cargo de " + incidente.getNombreResponsable());
+                    estado.getStyleClass().add("status-assigned");
+                }
             } else {
                 estado.setText("🟢 RESUELTO");
                 estado.getStyleClass().add("status-resolved");
@@ -212,7 +247,7 @@ public class AdministradorController {
     }
 
     private void mostrarBandeja() {
-        modoHistorico = false;
+        vista = Vista.BANDEJA;
         activarNavegacion(btnBandeja);
         lblSeccion.setText("Bandeja de Incidentes");
         filtrosFechas.setVisible(false);
@@ -221,21 +256,29 @@ public class AdministradorController {
         txtBuscar.clear();
         dpDesde.setValue(null);
         dpHasta.setValue(null);
-        btnResolver.setVisible(true);
-        btnResolver.setManaged(true);
         limpiarDetalle();
         cargarLista();
     }
 
-    private void mostrarMisIncidentes() {
-        modoHistorico = true;
-        activarNavegacion(btnMisIncidentes);
-        lblSeccion.setText("Mis incidentes resueltos");
+    private void mostrarMisCasos() {
+        vista = Vista.MIS_CASOS;
+        activarNavegacion(btnMisCasos);
+        lblSeccion.setText("Mis casos en investigación");
+        filtrosFechas.setVisible(false);
+        filtrosFechas.setManaged(false);
+        txtBuscar.setPromptText("Buscar en mis casos...");
+        txtBuscar.clear();
+        limpiarDetalle();
+        cargarLista();
+    }
+
+    private void mostrarHistorial() {
+        vista = Vista.HISTORIAL;
+        activarNavegacion(btnHistorial);
+        lblSeccion.setText("Historial de incidentes resueltos");
         filtrosFechas.setVisible(true);
         filtrosFechas.setManaged(true);
         txtBuscar.setPromptText("N°, título, empleado, sector o área...");
-        btnResolver.setVisible(false);
-        btnResolver.setManaged(false);
         limpiarDetalle();
         cargarLista();
     }
@@ -256,9 +299,26 @@ public class AdministradorController {
         }
     }
 
+    private void abrirUsuarios() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/Usuarios.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Gestión de administradores");
+            stage.setScene(new Scene(root, 1200, 750));
+            stage.setMaximized(true);
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarError("No se pudo abrir la gestión de administradores.");
+        }
+    }
+
     private void activarNavegacion(Button activo) {
         btnBandeja.getStyleClass().remove("nav-button-active");
-        btnMisIncidentes.getStyleClass().remove("nav-button-active");
+        btnMisCasos.getStyleClass().remove("nav-button-active");
+        btnHistorial.getStyleClass().remove("nav-button-active");
         activo.getStyleClass().add("nav-button-active");
     }
 
@@ -281,6 +341,9 @@ public class AdministradorController {
         lblSector.setText(incidente.getSector());
         lblPrioridad.setText(incidente.getPrioridad().toString());
         lblEstado.setText(incidente.getEstado());
+        lblResponsable.setText(incidente.getAsignadoA() == null
+                ? "Sin responsable"
+                : incidente.getNombreResponsable());
         txtDescripcion.setText(incidente.getDescripcion());
 
         contenedorImagenes.getChildren().clear();
@@ -290,6 +353,7 @@ public class AdministradorController {
             ImageView vista = VisorImagenService.crearMiniatura(img, imagenes, 120, 90);
             if (vista != null) contenedorImagenes.getChildren().add(vista);
         }
+        actualizarAcciones();
     }
     
     private void abrirDetalleCaso(Incidente incidente) {
@@ -300,6 +364,11 @@ public class AdministradorController {
             DetalleCasoAdminController controller = loader.getController();
             controller.cargarIncidente(incidente);
             controller.setOnCasoResuelto(() -> {
+                incidenteSeleccionado = null;
+                cargarLista();
+                limpiarDetalle();
+            });
+            controller.setOnAsignacionCambiada(() -> {
                 incidenteSeleccionado = null;
                 cargarLista();
                 limpiarDetalle();
@@ -323,8 +392,88 @@ public class AdministradorController {
         lblSector.setText("");
         lblPrioridad.setText("");
         lblEstado.setText("");
+        lblResponsable.setText("");
         txtDescripcion.clear();
         contenedorImagenes.getChildren().clear();
+        actualizarAcciones();
+    }
+
+    private void actualizarAcciones() {
+        boolean seleccionado = incidenteSeleccionado != null;
+        boolean pendiente = seleccionado
+                && "PENDIENTE".equalsIgnoreCase(incidenteSeleccionado.getEstado());
+        boolean sinResponsable = pendiente && incidenteSeleccionado.getAsignadoA() == null;
+        boolean propio = pendiente && incidenteSeleccionado.estaAsignadoA(usuarioActual.getId());
+        mostrarBoton(btnTomarCaso, sinResponsable);
+        mostrarBoton(btnLiberarCaso, propio);
+        mostrarBoton(btnResolver, propio);
+        btnExportar.setDisable(!seleccionado);
+    }
+
+    private void mostrarBoton(Button boton, boolean mostrar) {
+        boton.setVisible(mostrar);
+        boton.setManaged(mostrar);
+    }
+
+    private void tomarCaso() {
+        if (incidenteSeleccionado == null) return;
+        try {
+            AsignacionIncidenteApiResponse asignacion = dao.tomar(
+                    incidenteSeleccionado.getId(), usuarioActual.getId()
+            );
+            incidenteSeleccionado.asignarA(
+                    asignacion.administradorId(),
+                    asignacion.nombreResponsable(),
+                    asignacion.fechaAsignacion()
+            );
+            cargarLista();
+            limpiarDetalle();
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
+            cargarLista();
+        }
+    }
+
+    private void liberarCaso() {
+        if (incidenteSeleccionado == null) return;
+        try {
+            dao.liberar(incidenteSeleccionado.getId(), usuarioActual.getId());
+            incidenteSeleccionado.liberarAsignacion();
+            cargarLista();
+            limpiarDetalle();
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
+            cargarLista();
+        }
+    }
+
+    private void resolverSeleccionado() {
+        if (incidenteSeleccionado == null || !incidenteSeleccionado.estaAsignadoA(usuarioActual.getId())) return;
+        javafx.scene.control.Alert confirmacion = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.CONFIRMATION,
+                "¿Desea marcar el expediente N° " + incidenteSeleccionado.getId() + " como resuelto?",
+                javafx.scene.control.ButtonType.OK,
+                javafx.scene.control.ButtonType.CANCEL
+        );
+        if (confirmacion.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL)
+                != javafx.scene.control.ButtonType.OK) return;
+        try {
+            dao.resolver(incidenteSeleccionado.getId(), usuarioActual.getId());
+            cargarLista();
+            limpiarDetalle();
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
+        }
+    }
+
+    private void exportarSeleccionado() {
+        if (incidenteSeleccionado == null) return;
+        try {
+            pdfService.exportarExpediente(incidenteSeleccionado, btnExportar.getScene().getWindow());
+        } catch (Exception e) {
+            mostrarError("No se pudo exportar el expediente. "
+                    + (e.getMessage() == null ? "" : e.getMessage()));
+        }
     }
     private void mostrarError(String mensaje) {
         javafx.scene.control.Alert alerta = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);

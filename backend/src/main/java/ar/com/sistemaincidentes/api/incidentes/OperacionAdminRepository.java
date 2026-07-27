@@ -1,6 +1,9 @@
 package ar.com.sistemaincidentes.api.incidentes;
 
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -17,7 +20,7 @@ public class OperacionAdminRepository {
 
     public boolean existeAdministrador(int administradorId) {
         Boolean existe = jdbcTemplate.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM usuarios WHERE id = ? AND UPPER(rol) = 'ADMIN')",
+                "SELECT EXISTS (SELECT 1 FROM usuarios WHERE id = ? AND UPPER(rol) = 'ADMIN' AND activo = TRUE)",
                 Boolean.class,
                 administradorId
         );
@@ -30,6 +33,74 @@ public class OperacionAdminRepository {
                 (rs, fila) -> rs.getString("estado"),
                 incidenteId
         ).stream().findFirst().orElse(null);
+    }
+
+    public Integer obtenerResponsable(int incidenteId) {
+        return jdbcTemplate.query(
+                "SELECT asignado_a FROM incidentes WHERE id = ?",
+                (rs, fila) -> {
+                    int valor = rs.getInt("asignado_a");
+                    return rs.wasNull() ? null : valor;
+                },
+                incidenteId
+        ).stream().findFirst().orElse(null);
+    }
+
+    public boolean tomarIncidente(int incidenteId, int administradorId) {
+        return jdbcTemplate.update(
+                """
+                UPDATE incidentes
+                SET asignado_a = ?, fecha_asignacion = CURRENT_TIMESTAMP
+                WHERE id = ? AND estado <> 'RESUELTO' AND asignado_a IS NULL
+                """,
+                administradorId,
+                incidenteId
+        ) == 1;
+    }
+
+    public boolean liberarIncidente(int incidenteId, int administradorId) {
+        return jdbcTemplate.update(
+                """
+                UPDATE incidentes
+                SET asignado_a = NULL, fecha_asignacion = NULL
+                WHERE id = ? AND estado <> 'RESUELTO' AND asignado_a = ?
+                """,
+                incidenteId,
+                administradorId
+        ) == 1;
+    }
+
+    public void registrarAsignacion(int incidenteId, int administradorId, String accion) {
+        jdbcTemplate.update(
+                """
+                INSERT INTO incidente_asignaciones (incidente_id, administrador_id, accion)
+                VALUES (?, ?, ?)
+                """,
+                incidenteId,
+                administradorId,
+                accion
+        );
+    }
+
+    public Optional<AsignacionIncidenteResponse> obtenerAsignacion(int incidenteId) {
+        return jdbcTemplate.query(
+                """
+                SELECT i.id, i.asignado_a, u.nombre, i.fecha_asignacion
+                FROM incidentes i
+                LEFT JOIN usuarios u ON u.id = i.asignado_a
+                WHERE i.id = ?
+                """,
+                (rs, fila) -> {
+                    int asignado = rs.getInt("asignado_a");
+                    Integer administradorId = rs.wasNull() ? null : asignado;
+                    Timestamp fecha = rs.getTimestamp("fecha_asignacion");
+                    LocalDateTime fechaAsignacion = fecha == null ? null : fecha.toLocalDateTime();
+                    return new AsignacionIncidenteResponse(
+                            rs.getInt("id"), administradorId, rs.getString("nombre"), fechaAsignacion
+                    );
+                },
+                incidenteId
+        ).stream().findFirst();
     }
 
     public int insertarBoletin(int incidenteId, BoletinAdminEscrituraRequest boletin) {
@@ -88,10 +159,11 @@ public class OperacionAdminRepository {
                 """
                 UPDATE incidentes
                 SET estado = 'RESUELTO', fecha_resolucion = CURRENT_TIMESTAMP, resuelto_por = ?
-                WHERE id = ? AND estado <> 'RESUELTO'
+                WHERE id = ? AND estado <> 'RESUELTO' AND asignado_a = ?
                 """,
                 administradorId,
-                incidenteId
+                incidenteId,
+                administradorId
         );
         return filas == 1;
     }

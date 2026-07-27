@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.UsuariosController"
+            stylesheets="@../resources/css/admin.css"
+            styleClass="users-root">
+
+    <top>
+        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Gestión de administradores" styleClass="page-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="txtBuscar"
+                       promptText="Nombre, usuario o sector..."
+                       prefWidth="330"/>
+            <Button fx:id="btnNuevo" text="+ Nuevo administrador" styleClass="button-primary"/>
+            <Button fx:id="btnCerrar" text="Cerrar" styleClass="button-secondary"/>
+        </HBox>
+    </top>
+
+    <center>
+        <HBox spacing="18" styleClass="users-content">
+            <VBox spacing="12" styleClass="users-table-card" HBox.hgrow="ALWAYS">
+                <Label text="Administradores autorizados" styleClass="section-title"/>
+                <TableView fx:id="tablaUsuarios" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="210"/>
+                        <TableColumn fx:id="colUsuario" text="Usuario de Windows" prefWidth="170"/>
+                        <TableColumn fx:id="colSector" text="Sector" prefWidth="150"/>
+                        <TableColumn fx:id="colRol" text="Permiso" prefWidth="100"/>
+                        <TableColumn fx:id="colAbiertos" text="Casos abiertos" prefWidth="115"/>
+                        <TableColumn fx:id="colResueltos" text="Resueltos" prefWidth="95"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="125"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="No se encontraron administradores." styleClass="empty-state"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+
+            <VBox prefWidth="360" minWidth="320" spacing="12" styleClass="users-form-card">
+                <Label fx:id="lblFormulario" text="Nuevo administrador" styleClass="section-title"/>
+                <Label fx:id="lblEstadoSeleccionado" text="El administrador se creará activo"
+                       styleClass="status-active"/>
+
+                <Label text="Nombre y apellido" styleClass="field-label"/>
+                <TextField fx:id="txtNombre" promptText="Nombre Apellido"/>
+
+                <Label text="Usuario de Windows" styleClass="field-label"/>
+                <TextField fx:id="txtUsuarioWindows" promptText="usuario.windows"/>
+
+                <Label text="Sector" styleClass="field-label"/>
+                <TextField fx:id="txtSector" promptText="Sector o área"/>
+
+                <Label text="Permiso" styleClass="field-label"/>
+                <ComboBox fx:id="cmbRol" maxWidth="Infinity" disable="true"/>
+
+                <Label text="Casos actualmente a cargo" styleClass="field-label"/>
+                <ListView fx:id="listaCasos" prefHeight="150"/>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <Button fx:id="btnGuardar" text="Guardar administrador"
+                        maxWidth="Infinity" styleClass="button-primary"/>
+                <Button fx:id="btnCambiarEstado" text="Deshabilitar"
+                        maxWidth="Infinity" styleClass="button-danger"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

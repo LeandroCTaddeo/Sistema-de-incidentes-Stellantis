@@ -27,7 +27,10 @@ public record IncidenteApiResponse(
         String superiorInmediato,
         String historial,
         LocalDateTime fechaResolucion,
-        Integer resueltoPor
+        Integer resueltoPor,
+        Integer asignadoA,
+        String nombreResponsable,
+        LocalDateTime fechaAsignacion
 ) {
 
     public Incidente convertir() {
@@ -52,7 +55,10 @@ public record IncidenteApiResponse(
                 superiorInmediato,
                 historial,
                 fechaResolucion,
-                resueltoPor
+                resueltoPor,
+                asignadoA,
+                nombreResponsable,
+                fechaAsignacion
         );
     }
 }

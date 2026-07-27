@@ -37,9 +37,13 @@ public class IncidenteConsultaRepository {
                 i.superior_inmediato,
                 i.historial,
                 i.fecha_resolucion,
-                i.resuelto_por
+                i.resuelto_por,
+                i.asignado_a,
+                responsable.nombre AS nombre_responsable,
+                i.fecha_asignacion
             FROM incidentes i
             JOIN usuarios u ON u.id = i.usuario_id
+            LEFT JOIN usuarios responsable ON responsable.id = i.asignado_a
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -58,12 +62,27 @@ public class IncidenteConsultaRepository {
             LocalDate desde,
             LocalDate hasta
     ) {
+        return listar(estado, texto, desde, hasta, null);
+    }
+
+    public List<IncidenteResponse> listar(
+            EstadoIncidente estado,
+            String texto,
+            LocalDate desde,
+            LocalDate hasta,
+            Integer asignadoA
+    ) {
         StringBuilder sql = new StringBuilder(CONSULTA_BASE).append(" WHERE 1 = 1 ");
         List<Object> parametros = new ArrayList<>();
 
         if (estado != null) {
             sql.append(" AND i.estado = ? ");
             parametros.add(estado.name());
+        }
+
+        if (asignadoA != null) {
+            sql.append(" AND i.asignado_a = ? ");
+            parametros.add(asignadoA);
         }
 
         if (texto != null && !texto.isBlank()) {
@@ -135,7 +154,10 @@ public class IncidenteConsultaRepository {
                 rs.getString("superior_inmediato"),
                 rs.getString("historial"),
                 obtenerFechaHora(rs, "fecha_resolucion"),
-                obtenerEntero(rs, "resuelto_por")
+                obtenerEntero(rs, "resuelto_por"),
+                obtenerEntero(rs, "asignado_a"),
+                rs.getString("nombre_responsable"),
+                obtenerFechaHora(rs, "fecha_asignacion")
         );
     }
 

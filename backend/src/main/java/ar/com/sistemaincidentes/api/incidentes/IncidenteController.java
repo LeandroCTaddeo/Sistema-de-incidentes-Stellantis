@@ -39,8 +39,12 @@ public class IncidenteController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) Integer asignadoA
     ) {
+        if (asignadoA != null) {
+            return service.listarAsignados(estado, texto, desde, hasta, asignadoA);
+        }
         return service.listar(estado, texto, desde, hasta);
     }
 

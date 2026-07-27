@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -46,5 +47,21 @@ public class OperacionAdminController {
             @Valid @RequestBody ResolucionIncidenteRequest solicitud
     ) {
         return service.resolver(incidenteId, solicitud);
+    }
+
+    @PostMapping("/asignacion")
+    public AsignacionIncidenteResponse tomar(
+            @PathVariable int incidenteId,
+            @Valid @RequestBody AsignacionIncidenteRequest solicitud
+    ) {
+        return service.tomar(incidenteId, solicitud);
+    }
+
+    @DeleteMapping("/asignacion")
+    public AsignacionIncidenteResponse liberar(
+            @PathVariable int incidenteId,
+            @Valid @RequestBody AsignacionIncidenteRequest solicitud
+    ) {
+        return service.liberar(incidenteId, solicitud);
     }
 }

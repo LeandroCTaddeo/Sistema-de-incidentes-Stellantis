@@ -26,6 +26,9 @@ public class Incidente {
     private String historial;
     private LocalDateTime fechaResolucion;
     private Integer resueltoPor;
+    private Integer asignadoA;
+    private String nombreResponsable;
+    private LocalDateTime fechaAsignacion;
 
     // Constructor para crear un incidente nuevo
     public Incidente(String titulo, String descripcion, Prioridad prioridad, int usuarioId,
@@ -61,7 +64,8 @@ public class Incidente {
             String fecha, LocalDate fechaRegistro, LocalDate fechaEmision, String lugar,
             String nombreApellido, String cargo, String matricula, String dni,
             String area, String superiorInmediato, String historial,
-            LocalDateTime fechaResolucion, Integer resueltoPor) {
+            LocalDateTime fechaResolucion, Integer resueltoPor,
+            Integer asignadoA, String nombreResponsable, LocalDateTime fechaAsignacion) {
 
         this.id = id;
         this.titulo = titulo;
@@ -84,6 +88,9 @@ public class Incidente {
         this.historial = historial;
         this.fechaResolucion = fechaResolucion;
         this.resueltoPor = resueltoPor;
+        this.asignadoA = asignadoA;
+        this.nombreResponsable = nombreResponsable;
+        this.fechaAsignacion = fechaAsignacion;
     }
 
     public int getId() {
@@ -134,6 +141,25 @@ public class Incidente {
     public String getHistorial() { return historial; }
     public LocalDateTime getFechaResolucion() { return fechaResolucion; }
     public Integer getResueltoPor() { return resueltoPor; }
+    public Integer getAsignadoA() { return asignadoA; }
+    public String getNombreResponsable() { return nombreResponsable; }
+    public LocalDateTime getFechaAsignacion() { return fechaAsignacion; }
+
+    public boolean estaAsignadoA(int administradorId) {
+        return asignadoA != null && asignadoA == administradorId;
+    }
+
+    public void asignarA(int administradorId, String nombre, LocalDateTime fecha) {
+        this.asignadoA = administradorId;
+        this.nombreResponsable = nombre;
+        this.fechaAsignacion = fecha;
+    }
+
+    public void liberarAsignacion() {
+        this.asignadoA = null;
+        this.nombreResponsable = null;
+        this.fechaAsignacion = null;
+    }
 
     public void marcarResuelto(int administradorId, LocalDateTime fechaResolucion) {
         this.estado = "RESUELTO";
