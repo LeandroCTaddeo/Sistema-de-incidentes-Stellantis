@@ -6,6 +6,8 @@ import java.util.List;
 import dao.ReporteDAO;
 import dao.ReporteDAO.DatoConteo;
 import dao.ReporteDAO.Resumen;
+import dao.ReporteDAO.ReporteCompleto;
+import api.IncidenteApiException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -84,13 +86,21 @@ public class ReportesController {
             return;
         }
 
-        Resumen resumen = reporteDAO.obtenerResumen(desde, hasta);
+        ReporteCompleto reporte;
+        try {
+            reporte = reporteDAO.obtenerReporte(desde, hasta);
+        } catch (IncidenteApiException e) {
+            mostrarError(e.getMessage());
+            return;
+        }
+
+        Resumen resumen = reporte.resumen();
         lblTotal.setText(String.valueOf(resumen.total()));
         lblPendientes.setText(String.valueOf(resumen.pendientes()));
         lblResueltos.setText(String.valueOf(resumen.resueltos()));
         lblTiempoPromedio.setText(String.format("%.1f h", resumen.horasPromedio()));
 
-        List<DatoConteo> datosAreas = reporteDAO.obtenerPorArea(desde, hasta);
+        List<DatoConteo> datosAreas = reporte.areas();
         XYChart.Series<String, Number> serie = new XYChart.Series<>();
         serie.setName("Incidentes");
         long maximo = 0;
@@ -104,7 +114,7 @@ public class ReportesController {
         configurarEjeCantidad(maximo);
 
         ObservableList<PieChart.Data> prioridades = FXCollections.observableArrayList();
-        for (DatoConteo dato : reporteDAO.obtenerPorPrioridad(desde, hasta)) {
+        for (DatoConteo dato : reporte.prioridades()) {
             prioridades.add(
                     new PieChart.Data(dato.nombre() + " (" + dato.cantidad() + ")", dato.cantidad())
             );

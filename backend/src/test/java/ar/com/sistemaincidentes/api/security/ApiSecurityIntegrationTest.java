@@ -68,7 +68,7 @@ class ApiSecurityIntegrationTest {
 
     @Test
     void permiteIncidentesConTokenYRolAdministrador() throws Exception {
-        when(service.listar(isNull())).thenReturn(List.of());
+        when(service.listar(isNull(), isNull(), isNull(), isNull())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/incidentes")
                         .header(

@@ -10,6 +10,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -51,7 +52,18 @@ public class IncidenteApiClient {
     }
 
     public List<Incidente> listar(String estado) {
-        URI uri = crearUri(estado);
+        return consultar(crearUri(estado, null, null, null));
+    }
+
+    public List<Incidente> buscarResueltos(
+            String texto,
+            LocalDate desde,
+            LocalDate hasta
+    ) {
+        return consultar(crearUri("RESUELTO", texto, desde, hasta));
+    }
+
+    private List<Incidente> consultar(URI uri) {
         HttpRequest request = HttpRequest.newBuilder(uri)
                 .timeout(TIMEOUT)
                 .header("Accept", "application/json")
@@ -221,14 +233,28 @@ public class IncidenteApiClient {
     private record ApiErrorResponse(String message) {
     }
 
-    private URI crearUri(String estado) {
+    private URI crearUri(
+            String estado,
+            String texto,
+            LocalDate desde,
+            LocalDate hasta
+    ) {
         String ruta = urlBase + "/api/incidentes";
-        if (estado == null || estado.isBlank()) {
-            return URI.create(ruta);
-        }
+        List<String> parametros = new ArrayList<>();
+        agregarParametro(parametros, "estado", estado);
+        agregarParametro(parametros, "texto", texto);
+        agregarParametro(parametros, "desde", desde == null ? null : desde.toString());
+        agregarParametro(parametros, "hasta", hasta == null ? null : hasta.toString());
 
-        return URI.create(
-                ruta + "?estado=" + URLEncoder.encode(estado, StandardCharsets.UTF_8)
+        return URI.create(parametros.isEmpty() ? ruta : ruta + "?" + String.join("&", parametros));
+    }
+
+    private void agregarParametro(List<String> parametros, String nombre, String valor) {
+        if (valor == null || valor.isBlank()) return;
+        parametros.add(
+                URLEncoder.encode(nombre, StandardCharsets.UTF_8)
+                + "="
+                + URLEncoder.encode(valor.trim(), StandardCharsets.UTF_8)
         );
     }
 
