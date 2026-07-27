@@ -27,7 +27,7 @@ public class ReporteApiClient {
     public ReporteApiClient() {
         this(
                 System.getenv().getOrDefault("INCIDENTES_API_URL", "http://127.0.0.1:8080"),
-                System.getenv("INCIDENTES_API_TOKEN"),
+                ApiAutenticacion.credencialDesdeEntorno(),
                 HttpClient.newBuilder().connectTimeout(TIMEOUT).build()
         );
     }
@@ -35,6 +35,7 @@ public class ReporteApiClient {
     ReporteApiClient(String urlBase, String tokenApi, HttpClient httpClient) {
         this.urlBase = quitarBarraFinal(urlBase);
         this.tokenApi = validarToken(tokenApi);
+        ApiAutenticacion.validarTransporte(this.urlBase, this.tokenApi);
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
@@ -52,7 +53,7 @@ public class ReporteApiClient {
                 )
                 .timeout(TIMEOUT)
                 .header("Accept", "application/json")
-                .header(HEADER_API_KEY, tokenApi)
+                .header(ApiAutenticacion.nombreCabecera(tokenApi), ApiAutenticacion.valorCabecera(tokenApi))
                 .GET()
                 .build();
 

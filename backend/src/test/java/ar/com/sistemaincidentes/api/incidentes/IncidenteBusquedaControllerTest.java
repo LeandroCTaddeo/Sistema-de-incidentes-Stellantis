@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import ar.com.sistemaincidentes.api.security.ApiKeyAuthenticationFilter;
 import ar.com.sistemaincidentes.api.security.SecurityConfig;
+import ar.com.sistemaincidentes.api.security.AuthenticatedUserGuard;
 import ar.com.sistemaincidentes.api.web.ApiExceptionHandler;
 
 @WebMvcTest(IncidenteController.class)
@@ -38,6 +39,9 @@ class IncidenteBusquedaControllerTest {
 
     @MockitoBean
     private IncidenteCreacionService creacionService;
+
+    @MockitoBean
+    private AuthenticatedUserGuard authenticatedUserGuard;
 
     @Test
     void recibeFiltrosHistoricosYDevuelveResultados() throws Exception {

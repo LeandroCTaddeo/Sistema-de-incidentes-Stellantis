@@ -1,0 +1,25 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI}
+          audiences: ${OIDC_AUDIENCE}
+
+server:
+  address: ${API_HOST:0.0.0.0}
+  ssl:
+    enabled: true
+    key-store: ${TLS_KEYSTORE_PATH}
+    key-store-password: ${TLS_KEYSTORE_PASSWORD}
+    key-store-type: ${TLS_KEYSTORE_TYPE:PKCS12}
+    key-alias: ${TLS_KEY_ALIAS:incidentes-api}
+
+api:
+  security:
+    identity-from-principal: true
+    oidc:
+      username-claim: ${OIDC_USERNAME_CLAIM:preferred_username}
+      roles-claim: ${OIDC_ROLES_CLAIM:roles}
+      admin-role: ${OIDC_ADMIN_ROLE:INCIDENTES_ADMIN}
+      employee-role: ${OIDC_EMPLOYEE_ROLE:INCIDENTES_EMPLOYEE}

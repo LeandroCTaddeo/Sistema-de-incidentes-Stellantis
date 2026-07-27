@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import ar.com.sistemaincidentes.api.security.IdentidadNoCoincideException;
+
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
@@ -87,6 +89,14 @@ public class ApiExceptionHandler {
                 "La base de datos no está disponible en este momento.",
                 request.getRequestURI()
         );
+    }
+
+    @ExceptionHandler(IdentidadNoCoincideException.class)
+    public ResponseEntity<ApiErrorResponse> identidadNoCoincide(
+            IdentidadNoCoincideException exception,
+            HttpServletRequest request
+    ) {
+        return respuesta(HttpStatus.FORBIDDEN, exception.getMessage(), request.getRequestURI());
     }
 
     private ResponseEntity<ApiErrorResponse> respuesta(

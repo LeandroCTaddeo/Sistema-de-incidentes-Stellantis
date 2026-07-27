@@ -1,7 +1,9 @@
 package ar.com.sistemaincidentes.api.usuarios;
 
 import java.util.List;
+import java.security.Principal;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -19,14 +21,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsuarioController {
 
     private final UsuarioService service;
+    private final boolean identidadDesdePrincipal;
 
-    public UsuarioController(UsuarioService service) {
+    public UsuarioController(
+            UsuarioService service,
+            @Value("${api.security.identity-from-principal:false}") boolean identidadDesdePrincipal
+    ) {
         this.service = service;
+        this.identidadDesdePrincipal = identidadDesdePrincipal;
     }
 
     @GetMapping("/actual")
-    public UsuarioResponse obtenerActual(@RequestParam String usuarioWindows) {
-        return service.obtenerActual(usuarioWindows);
+    public UsuarioResponse obtenerActual(
+            @RequestParam(required = false) String usuarioWindows,
+            Principal principal
+    ) {
+        String identidad = identidadDesdePrincipal
+                ? (principal == null ? null : principal.getName())
+                : usuarioWindows;
+        return service.obtenerActual(identidad);
     }
 
     @GetMapping
