@@ -118,6 +118,10 @@ public class IncidenteDAO {
 	}
 
 	public List<Incidente> buscarResueltos(String texto, LocalDate desde, LocalDate hasta) {
+		if (usarApiParaLecturas()) {
+			return apiClient().buscarResueltos(texto, desde, hasta);
+		}
+
 		List<Incidente> lista = new ArrayList<>();
 		String termino = texto == null ? "" : texto.trim().toLowerCase();
 

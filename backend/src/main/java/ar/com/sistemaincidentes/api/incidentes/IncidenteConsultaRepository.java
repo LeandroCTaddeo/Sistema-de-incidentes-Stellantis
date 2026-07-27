@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,17 +49,59 @@ public class IncidenteConsultaRepository {
     }
 
     public List<IncidenteResponse> listar(EstadoIncidente estado) {
-        if (estado == null) {
-            return jdbcTemplate.query(
-                    CONSULTA_BASE + " ORDER BY i.id DESC",
-                    this::mapear
-            );
+        return listar(estado, "", null, null);
+    }
+
+    public List<IncidenteResponse> listar(
+            EstadoIncidente estado,
+            String texto,
+            LocalDate desde,
+            LocalDate hasta
+    ) {
+        StringBuilder sql = new StringBuilder(CONSULTA_BASE).append(" WHERE 1 = 1 ");
+        List<Object> parametros = new ArrayList<>();
+
+        if (estado != null) {
+            sql.append(" AND i.estado = ? ");
+            parametros.add(estado.name());
+        }
+
+        if (texto != null && !texto.isBlank()) {
+            sql.append("""
+                    AND (
+                        TRANSLATE(LOWER(COALESCE(i.titulo, '')), 'áéíóúüñ', 'aeiouun') LIKE ?
+                     OR TRANSLATE(LOWER(COALESCE(u.nombre, '')), 'áéíóúüñ', 'aeiouun') LIKE ?
+                     OR TRANSLATE(LOWER(COALESCE(i.nombre_apellido, '')), 'áéíóúüñ', 'aeiouun') LIKE ?
+                     OR TRANSLATE(LOWER(COALESCE(i.area, '')), 'áéíóúüñ', 'aeiouun') LIKE ?
+                     OR TRANSLATE(LOWER(COALESCE(u.sector, '')), 'áéíóúüñ', 'aeiouun') LIKE ?
+                     OR TRANSLATE(LOWER(COALESCE(i.lugar, '')), 'áéíóúüñ', 'aeiouun') LIKE ?
+                     OR TRANSLATE(LOWER(COALESCE(i.descripcion, '')), 'áéíóúüñ', 'aeiouun') LIKE ?
+                     OR CAST(i.id AS TEXT) LIKE ?
+                    )
+                    """);
+            String patron = "%" + texto + "%";
+            for (int i = 0; i < 8; i++) parametros.add(patron);
+        }
+
+        if (desde != null) {
+            sql.append(" AND COALESCE(i.fecha_resolucion, i.fecha) >= ? ");
+            parametros.add(Timestamp.valueOf(desde.atStartOfDay()));
+        }
+        if (hasta != null) {
+            sql.append(" AND COALESCE(i.fecha_resolucion, i.fecha) < ? ");
+            parametros.add(Timestamp.valueOf(hasta.plusDays(1).atStartOfDay()));
+        }
+
+        if (estado == EstadoIncidente.RESUELTO) {
+            sql.append(" ORDER BY COALESCE(i.fecha_resolucion, i.fecha) DESC, i.id DESC");
+        } else {
+            sql.append(" ORDER BY i.id DESC");
         }
 
         return jdbcTemplate.query(
-                CONSULTA_BASE + " WHERE i.estado = ? ORDER BY i.id DESC",
+                sql.toString(),
                 this::mapear,
-                estado.name()
+                parametros.toArray()
         );
     }
 

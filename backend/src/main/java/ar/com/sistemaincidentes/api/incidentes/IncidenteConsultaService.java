@@ -1,6 +1,9 @@
 package ar.com.sistemaincidentes.api.incidentes;
 
+import java.text.Normalizer;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.stereotype.Service;
 
@@ -14,6 +17,33 @@ public class IncidenteConsultaService {
     }
 
     public List<IncidenteResponse> listar(String estado) {
-        return repository.listar(EstadoIncidente.desdeParametro(estado));
+        return listar(estado, null, null, null);
+    }
+
+    public List<IncidenteResponse> listar(
+            String estado,
+            String texto,
+            LocalDate desde,
+            LocalDate hasta
+    ) {
+        if (desde != null && hasta != null && desde.isAfter(hasta)) {
+            throw new IllegalArgumentException(
+                    "La fecha desde no puede ser posterior a la fecha hasta."
+            );
+        }
+        return repository.listar(
+                EstadoIncidente.desdeParametro(estado),
+                normalizarTexto(texto),
+                desde,
+                hasta
+        );
+    }
+
+    private String normalizarTexto(String valor) {
+        if (valor == null) return "";
+        return Normalizer.normalize(valor, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(Locale.ROOT)
+                .trim();
     }
 }

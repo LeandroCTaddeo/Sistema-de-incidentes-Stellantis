@@ -9,11 +9,56 @@ import java.util.ArrayList;
 import java.util.List;
 
 import database.Conexion;
+import api.ReporteApiClient;
+import api.ReporteApiResponse;
 
 public class ReporteDAO {
 
     public record Resumen(long total, long pendientes, long resueltos, double horasPromedio) {}
     public record DatoConteo(String nombre, long cantidad) {}
+    public record ReporteCompleto(
+            Resumen resumen,
+            List<DatoConteo> areas,
+            List<DatoConteo> prioridades
+    ) {}
+
+    private ReporteApiClient apiClient;
+
+    private boolean usarApi() {
+        return "API".equalsIgnoreCase(
+                System.getenv().getOrDefault("INCIDENTES_DATA_SOURCE", "JDBC")
+        );
+    }
+
+    private ReporteApiClient apiClient() {
+        if (apiClient == null) apiClient = new ReporteApiClient();
+        return apiClient;
+    }
+
+    public ReporteCompleto obtenerReporte(LocalDate desde, LocalDate hasta) {
+        if (!usarApi()) {
+            return new ReporteCompleto(
+                    obtenerResumen(desde, hasta),
+                    obtenerPorArea(desde, hasta),
+                    obtenerPorPrioridad(desde, hasta)
+            );
+        }
+
+        ReporteApiResponse respuesta = apiClient().obtener(desde, hasta);
+        Resumen resumen = new Resumen(
+                respuesta.resumen().total(),
+                respuesta.resumen().pendientes(),
+                respuesta.resumen().resueltos(),
+                respuesta.resumen().horasPromedio()
+        );
+        List<DatoConteo> areas = respuesta.areas().stream()
+                .map(dato -> new DatoConteo(dato.nombre(), dato.cantidad()))
+                .toList();
+        List<DatoConteo> prioridades = respuesta.prioridades().stream()
+                .map(dato -> new DatoConteo(dato.nombre(), dato.cantidad()))
+                .toList();
+        return new ReporteCompleto(resumen, areas, prioridades);
+    }
 
     public Resumen obtenerResumen(LocalDate desde, LocalDate hasta) {
         String sql = """
