@@ -1,6 +1,7 @@
 package app;
 
 import javafx.application.Application;
+import api.IncidenteApiException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -38,7 +39,7 @@ public class Main extends Application {
 	        stage.setScene(scene);
 	        stage.setMaximized(true);
 	        stage.show();
-	    } catch (DatabaseException | IllegalStateException e) {
+	        } catch (DatabaseException | IncidenteApiException | IllegalStateException e) {
 	        mostrarErrorInicio(e.getMessage());
 	    } catch (Exception e) {
 	        mostrarErrorInicio("No se pudo iniciar la aplicación. Revise la configuración e inténtelo nuevamente.");
