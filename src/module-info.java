@@ -2,7 +2,6 @@ module SistemaIncidentes {
 
     requires javafx.controls;
     requires javafx.fxml;
-    requires java.sql;
     requires java.desktop;
     requires java.net.http;
     

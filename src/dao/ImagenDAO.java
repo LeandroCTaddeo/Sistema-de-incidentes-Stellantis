@@ -1,102 +1,22 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
-import database.Conexion;
-import database.DatabaseException;
-import models.Imagen;
 import api.ExpedienteApiClient;
+import models.Imagen;
 
 public class ImagenDAO {
 
     private ExpedienteApiClient apiClient;
 
-    private boolean usarApiParaLecturas() {
-        return "API".equalsIgnoreCase(
-                System.getenv().getOrDefault("INCIDENTES_DATA_SOURCE", "JDBC")
-        );
-    }
-
     private ExpedienteApiClient apiClient() {
-        if (apiClient == null) apiClient = new ExpedienteApiClient();
+        if (apiClient == null) {
+            apiClient = new ExpedienteApiClient();
+        }
         return apiClient;
     }
 
-    public void guardar(int incidenteId, String ruta) {
-
-        String sql = """
-                INSERT INTO imagenes
-                (incidente_id,ruta)
-                VALUES (?,?)
-                """;
-
-        try (Connection conexion = Conexion.conectar();
-             PreparedStatement ps = conexion.prepareStatement(sql)) {
-            ps.setInt(1, incidenteId);
-            ps.setString(2, ruta);
-
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("No se pudo registrar la imagen del incidente.", e);
-        }
-
-    }
-
     public List<Imagen> obtenerPorIncidente(int incidenteId) {
-        if (usarApiParaLecturas()) {
-            return apiClient().listarImagenes(incidenteId);
-        }
-
-        List<Imagen> lista = new ArrayList<>();
-
-        String sql = """
-                SELECT *
-                FROM imagenes
-                WHERE incidente_id=?
-                ORDER BY id ASC
-                """;
-
-        try {
-
-            Connection conexion = Conexion.conectar();
-
-            PreparedStatement ps = conexion.prepareStatement(sql);
-
-            ps.setInt(1, incidenteId);
-
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-
-                lista.add(
-
-                        new Imagen(
-                                rs.getInt("id"),
-                                rs.getInt("incidente_id"),
-                                rs.getString("ruta")
-                        )
-
-                );
-
-            }
-
-            rs.close();
-            ps.close();
-            conexion.close();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-        }
-
-        return lista;
-
+        return apiClient().listarImagenes(incidenteId);
     }
-
 }

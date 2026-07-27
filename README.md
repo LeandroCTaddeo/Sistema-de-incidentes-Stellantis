@@ -12,33 +12,79 @@ Aplicación de escritorio interna para registrar, investigar y cerrar incidentes
 - Visualización y descarga de imágenes adjuntas.
 - Reportes por período, estado, prioridad y área o sector.
 
+## Arquitectura actual
+
+La interfaz continúa siendo una aplicación de escritorio JavaFX. El acceso a los datos y al almacenamiento se realiza exclusivamente mediante el backend:
+
+```text
+JavaFX -> HTTP/API -> PostgreSQL
+                  -> almacenamiento central de imágenes
+```
+
+JavaFX no contiene el driver de PostgreSQL, no abre conexiones JDBC y no necesita conocer las credenciales de la base de datos. Esta separación permite desplegar el backend en un servidor interno sin modificar las vistas ni el diseño de los boletines.
+
 ## Tecnologías
+
+### Aplicación de escritorio
 
 - Java 21
 - JavaFX 21
-- Maven Wrapper
-- PostgreSQL
+- Maven
 - OpenPDF
+- Jackson
 
-## Configuración local
+### Backend
 
-La aplicación lee su configuración mediante variables de entorno. No se deben guardar credenciales dentro del repositorio.
+- Java 21
+- Spring Boot 3.5
+- Spring Security
+- PostgreSQL
+- JDBC administrado por Spring
+
+## Configuración de JavaFX
+
+La aplicación de escritorio utiliza estas variables de entorno:
 
 | Variable | Obligatoria | Descripción |
 | --- | --- | --- |
-| `DB_USER` | Sí | Usuario de PostgreSQL. |
-| `DB_PASSWORD` | Sí | Contraseña de PostgreSQL. |
-| `DB_URL` | No | URL JDBC. Por defecto: `jdbc:postgresql://localhost:5432/sistema_incidentes`. |
-| `INCIDENTES_FILES_PATH` | No | Carpeta administrada para las imágenes. En desarrollo usa `%USERPROFILE%\SistemaIncidentes\imagenes`. |
-| `INCIDENTES_DATA_SOURCE` | No | `JDBC` por defecto. Usar `API` para leer la bandeja y el expediente mediante el backend. |
-| `INCIDENTES_API_URL` | No | URL del backend. Por defecto: `http://127.0.0.1:8080`. |
-| `INCIDENTES_API_TOKEN` | Sí, en modo `API` | Token interno que debe coincidir con `API_INTERNAL_TOKEN` del backend. |
+| `INCIDENTES_API_URL` | No | URL del backend. En desarrollo usa `http://127.0.0.1:8080`. |
+| `INCIDENTES_API_TOKEN` | Sí | Token interno utilizado durante el desarrollo. Debe coincidir con `API_INTERNAL_TOKEN`. |
 
-En producción, `INCIDENTES_FILES_PATH` debe apuntar a una ubicación central accesible por los equipos autorizados mediante la red interna o la VPN.
+`DB_USER`, `DB_PASSWORD`, `DB_URL`, `INCIDENTES_FILES_PATH` e `INCIDENTES_DATA_SOURCE` no se utilizan en JavaFX.
+
+## Configuración del backend
+
+| Variable | Obligatoria | Descripción |
+| --- | --- | --- |
+| `DB_USER` | Sí | Usuario de PostgreSQL utilizado únicamente por el backend. |
+| `DB_PASSWORD` | Sí | Contraseña de PostgreSQL utilizada únicamente por el backend. |
+| `DB_URL` | No | URL JDBC. Por defecto: `jdbc:postgresql://localhost:5432/sistema_incidentes`. |
+| `API_HOST` | No | Interfaz de escucha. En desarrollo usa `127.0.0.1`. |
+| `API_PORT` | No | Puerto HTTP. Por defecto: `8080`. |
+| `API_INTERNAL_TOKEN` | Sí | Token interno exigido por los endpoints protegidos. No debe guardarse en Git. |
+| `API_INTERNAL_USER` | No | Identidad técnica asociada al token. |
+| `API_INTERNAL_ROLE` | No | Rol técnico asociado al token: `EMPLOYEE` o `ADMIN`. |
+| `INCIDENTES_FILES_PATH` | No | Carpeta administrada por el backend para las imágenes. |
+| `INCIDENTES_ALLOW_LEGACY_ABSOLUTE_PATHS` | No | Compatibilidad temporal con rutas absolutas antiguas. El valor predeterminado es `false`. |
+| `INCIDENTES_MAX_IMAGES` | No | Máximo de imágenes por incidente. Por defecto: `10`. |
+| `INCIDENTES_MAX_IMAGE_BYTES` | No | Tamaño máximo de cada imagen. Por defecto: 10 MB. |
+| `INCIDENTES_MAX_IMAGE_DIMENSION` | No | Máximo permitido para ancho o alto. Por defecto: `12000`. |
+| `INCIDENTES_MAX_REQUEST_SIZE` | No | Tamaño máximo de una solicitud multipart. Por defecto: `50MB`. |
 
 ## Compilar y ejecutar
 
-No es necesario instalar Maven: el repositorio incluye Maven Wrapper.
+El repositorio incluye Maven Wrapper, por lo que no es necesario instalar Maven.
+
+### Backend
+
+```powershell
+.\mvnw.cmd -f backend\pom.xml clean verify
+.\mvnw.cmd -f backend\pom.xml spring-boot:run
+```
+
+### JavaFX
+
+Con el backend iniciado y las variables de la API configuradas:
 
 ```powershell
 .\mvnw.cmd clean verify
@@ -47,92 +93,36 @@ No es necesario instalar Maven: el repositorio incluye Maven Wrapper.
 
 En Eclipse, después de incorporar archivos nuevos, actualizar el proyecto con `F5` y ejecutar `Project > Clean`.
 
-## API interna en desarrollo
+## API interna
 
-El repositorio incluye un backend independiente en `backend/`. Esta primera etapa no reemplaza todavía el acceso JDBC del cliente JavaFX ni modifica sus pantallas.
+Principales recursos disponibles:
 
-Variables utilizadas por el backend:
+- `GET /api/health`
+- `GET /api/usuarios/actual`
+- `GET /api/incidentes`
+- `POST /api/incidentes`
+- `GET /api/incidentes/{id}`
+- `GET /api/incidentes/{id}/boletines`
+- `POST /api/incidentes/{id}/boletines`
+- `PUT /api/incidentes/{id}/boletines/{boletinId}`
+- `GET /api/incidentes/{id}/imagenes`
+- `GET /api/incidentes/{id}/imagenes/{imagenId}/contenido`
+- `PATCH /api/incidentes/{id}/resolucion`
+- `GET /api/reportes`
 
-| Variable | Obligatoria | Descripción |
-| --- | --- | --- |
-| `DB_USER` | Sí | Usuario de PostgreSQL utilizado sólo por el servidor. |
-| `DB_PASSWORD` | Sí | Contraseña de PostgreSQL utilizada sólo por el servidor. |
-| `DB_URL` | No | URL JDBC del servidor PostgreSQL. |
-| `API_HOST` | No | Interfaz de escucha. Por defecto: `127.0.0.1`. |
-| `API_PORT` | No | Puerto HTTP local. Por defecto: `8080`. |
-| `API_INTERNAL_TOKEN` | Sí | Token interno exigido por los endpoints protegidos. No debe guardarse en Git. |
-| `API_INTERNAL_USER` | No | Identidad técnica asociada al token. Por defecto: `desktop-local`. |
-| `API_INTERNAL_ROLE` | No | Rol técnico asociado al token. Por defecto: `ADMIN`. |
-| `INCIDENTES_FILES_PATH` | No | Carpeta administrada desde la que el servidor entrega las imágenes. |
-| `INCIDENTES_ALLOW_LEGACY_ABSOLUTE_PATHS` | No | Compatibilidad temporal con rutas absolutas antiguas. Por seguridad, el valor predeterminado es `false`. |
-| `INCIDENTES_MAX_IMAGES` | No | Cantidad máxima de imágenes por incidente. Por defecto: `10`. |
-| `INCIDENTES_MAX_IMAGE_BYTES` | No | Tamaño máximo de cada imagen en bytes. Por defecto: `10485760` (10 MB). |
-| `INCIDENTES_MAX_IMAGE_DIMENSION` | No | Máximo permitido para ancho o alto de una imagen. Por defecto: `12000`. |
-| `INCIDENTES_MAX_REQUEST_SIZE` | No | Tamaño máximo de la solicitud multipart. Por defecto: `50MB`. |
+El envío de un boletín utiliza una solicitud multipart que incluye los datos y todas las imágenes. El backend valida los campos, el usuario, el contenido real de los archivos y sus límites antes de completar la operación.
 
-Compilar y ejecutar la API desde la raíz del repositorio:
+Las imágenes consultadas se descargan a una caché temporal de la sesión. El cliente nunca recibe ni conoce su ruta física dentro del servidor.
 
-```powershell
-.\mvnw.cmd -f backend\pom.xml clean verify
-.\mvnw.cmd -f backend\pom.xml spring-boot:run
-```
+## Base de datos
 
-Endpoints iniciales:
-
-- `GET http://127.0.0.1:8080/api/health`
-- `GET http://127.0.0.1:8080/api/incidentes`
-- `GET http://127.0.0.1:8080/api/incidentes?estado=PENDIENTE`
-- `GET http://127.0.0.1:8080/api/incidentes?estado=RESUELTO`
-- `GET http://127.0.0.1:8080/api/incidentes/{id}`
-- `GET http://127.0.0.1:8080/api/incidentes/{id}/boletines`
-- `GET http://127.0.0.1:8080/api/incidentes/{id}/imagenes`
-- `GET http://127.0.0.1:8080/api/incidentes/{id}/imagenes/{imagenId}/contenido`
-- `POST http://127.0.0.1:8080/api/incidentes`
-
-El endpoint de salud es público. Para consultar incidentes se debe enviar el token:
-
-```powershell
-$env:API_INTERNAL_TOKEN = "un-token-local-largo-y-aleatorio"
-$env:INCIDENTES_API_TOKEN = $env:API_INTERNAL_TOKEN
-$env:INCIDENTES_DATA_SOURCE = "API"
-```
-
-El token compartido es una protección transitoria para el desarrollo local de la
-arquitectura. No reemplaza la autenticación corporativa, no debe incluirse en el
-repositorio y no debe utilizarse para exponer la API en Internet. La instalación
-empresarial deberá usar HTTPS y Corporate ID/SSO (OIDC), con usuarios y roles
-validados por el servidor.
-
-Esta etapa escucha sólo en la computadora local. No se debe cambiar `API_HOST` para exponer el servicio en la red hasta incorporar autenticación y HTTPS.
-
-Para probar la bandeja, la lectura del expediente y el envío del boletín del empleado a través de la API, primero se inicia el backend y luego se ejecuta JavaFX con `INCIDENTES_DATA_SOURCE=API`. El envío utiliza una solicitud multipart que incluye el boletín y todas sus imágenes. El backend valida los campos, el usuario, el contenido real de las imágenes y sus límites antes de completar la operación.
-
-El cliente descarga las imágenes autorizadas a una carpeta temporal de la sesión, sin recibir ni conocer su ruta física en el servidor. La creación de boletines internos, la resolución y las funciones que todavía no fueron migradas continúan usando JDBC durante esta transición.
-
-La creación del incidente y el registro de sus imágenes se ejecutan dentro de una transacción. Si falla la base de datos o el almacenamiento, se revierte la operación y se eliminan los archivos parciales.
-
-Las imágenes administradas deben guardarse dentro de `INCIDENTES_FILES_PATH`. La compatibilidad con rutas absolutas antiguas sólo debe habilitarse de manera temporal durante una migración controlada; no se recomienda para una instalación nueva.
-
-## Arquitectura actual
-
-Durante la etapa de desarrollo:
-
-```text
-JavaFX -> JDBC -> PostgreSQL
-       -> almacenamiento configurable de imágenes
-```
-
-Para una instalación empresarial definitiva se prevé mover el acceso a datos y archivos a un backend desplegado en un servidor interno:
-
-```text
-JavaFX -> HTTPS/API -> PostgreSQL
-                   -> almacenamiento central de imágenes
-```
-
-La migración futura no requiere reemplazar las vistas JavaFX ni modificar el diseño de los boletines.
+Las migraciones SQL versionadas se encuentran en `database/migrations`. Deben aplicarse de manera controlada y conservarse en el historial del repositorio.
 
 ## Seguridad
 
-- Las credenciales se mantienen fuera de Git.
-- Los binarios generados y los archivos de configuración local están ignorados.
-- En una puesta en producción, los roles y permisos deberán validarse también en el servidor.
+- Las credenciales y los tokens se mantienen fuera de Git.
+- Sólo el backend tiene acceso a PostgreSQL y al almacenamiento administrado.
+- El backend valida permisos para las operaciones administrativas.
+- Los binarios y archivos de configuración local están ignorados.
+
+El token compartido es una protección transitoria para desarrollo. Antes de exponer el backend en la red empresarial se debe incorporar HTTPS y Corporate ID/SSO mediante OIDC, obteniendo la identidad y el rol desde la autenticación del servidor.
