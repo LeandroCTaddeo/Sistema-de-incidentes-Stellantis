@@ -57,12 +57,54 @@ public class OperacionAdminService {
         if ("RESUELTO".equalsIgnoreCase(estado)) {
             throw new ConflictoOperacionException("El expediente ya se encuentra resuelto.");
         }
+        validarResponsable(incidenteId, solicitud.administradorId());
         if (!repository.resolverIncidente(incidenteId, solicitud.administradorId())) {
             throw new ConflictoOperacionException(
                     "El expediente cambió de estado mientras se intentaba resolver."
             );
         }
         return new IncidenteResueltoResponse(incidenteId, "RESUELTO");
+    }
+
+    @Transactional
+    public AsignacionIncidenteResponse tomar(
+            int incidenteId,
+            AsignacionIncidenteRequest solicitud
+    ) {
+        validarId(incidenteId, "incidente");
+        validarAdministrador(solicitud.administradorId());
+        validarPendienteExistente(incidenteId);
+        if (!repository.tomarIncidente(incidenteId, solicitud.administradorId())) {
+            throw new ConflictoOperacionException(
+                    "El caso ya fue tomado por otro administrador. Actualice la bandeja."
+            );
+        }
+        repository.registrarAsignacion(incidenteId, solicitud.administradorId(), "TOMADO");
+        return repository.obtenerAsignacion(incidenteId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No se pudo recuperar la asignación creada."
+                ));
+    }
+
+    @Transactional
+    public AsignacionIncidenteResponse liberar(
+            int incidenteId,
+            AsignacionIncidenteRequest solicitud
+    ) {
+        validarId(incidenteId, "incidente");
+        validarAdministrador(solicitud.administradorId());
+        validarPendienteExistente(incidenteId);
+        validarResponsable(incidenteId, solicitud.administradorId());
+        if (!repository.liberarIncidente(incidenteId, solicitud.administradorId())) {
+            throw new ConflictoOperacionException(
+                    "El responsable del caso cambió mientras se intentaba liberarlo."
+            );
+        }
+        repository.registrarAsignacion(incidenteId, solicitud.administradorId(), "LIBERADO");
+        return repository.obtenerAsignacion(incidenteId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No se pudo recuperar el incidente liberado."
+                ));
     }
 
     private void validarOperacion(int incidenteId, int administradorId) {
@@ -75,6 +117,26 @@ public class OperacionAdminService {
         if ("RESUELTO".equalsIgnoreCase(estado)) {
             throw new ConflictoOperacionException(
                     "No se pueden modificar boletines de un expediente resuelto."
+            );
+        }
+        validarResponsable(incidenteId, administradorId);
+    }
+
+    private void validarPendienteExistente(int incidenteId) {
+        String estado = repository.obtenerEstadoIncidente(incidenteId);
+        if (estado == null) {
+            throw new RecursoNoEncontradoException("No se encontró el incidente solicitado.");
+        }
+        if ("RESUELTO".equalsIgnoreCase(estado)) {
+            throw new ConflictoOperacionException("El expediente ya se encuentra resuelto.");
+        }
+    }
+
+    private void validarResponsable(int incidenteId, int administradorId) {
+        Integer responsable = repository.obtenerResponsable(incidenteId);
+        if (responsable == null || responsable != administradorId) {
+            throw new ConflictoOperacionException(
+                    "Sólo el administrador responsable puede modificar o resolver este caso."
             );
         }
     }

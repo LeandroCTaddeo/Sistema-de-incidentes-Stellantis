@@ -3,6 +3,7 @@ package ar.com.sistemaincidentes.api.incidentes;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -82,6 +83,33 @@ class OperacionAdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(boletinJson().replace("Investigación", "")))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void tomaUnCasoConCredencialAdministrativa() throws Exception {
+        when(service.tomar(any(Integer.class), any()))
+                .thenReturn(new AsignacionIncidenteResponse(5, 2, "Ana Admin", null));
+
+        mockMvc.perform(post("/api/incidentes/5/asignacion")
+                        .header(ApiKeyAuthenticationFilter.HEADER_API_KEY, "token-admin-prueba")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"administradorId\":2}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.administradorId").value(2));
+    }
+
+    @Test
+    void liberaUnCasoConCredencialAdministrativa() throws Exception {
+        when(service.liberar(any(Integer.class), any()))
+                .thenReturn(new AsignacionIncidenteResponse(5, null, null, null));
+
+        mockMvc.perform(delete("/api/incidentes/5/asignacion")
+                        .header(ApiKeyAuthenticationFilter.HEADER_API_KEY, "token-admin-prueba")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"administradorId\":2}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.incidenteId").value(5))
+                .andExpect(jsonPath("$.administradorId").doesNotExist());
     }
 
     private String boletinJson() {

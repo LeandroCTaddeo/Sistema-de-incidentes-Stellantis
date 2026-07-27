@@ -36,6 +36,20 @@
 
                 <Separator/>
 
+                <Label fx:id="lblResponsableCaso"
+                       text="Sin responsable"
+                       styleClass="field-value"/>
+
+                <Button fx:id="btnTomarCaso"
+                        maxWidth="9999"
+                        styleClass="button-primary"
+                        text="Tomar caso"/>
+
+                <Button fx:id="btnLiberarCaso"
+                        maxWidth="9999"
+                        styleClass="button-secondary"
+                        text="Liberar caso"/>
+
                 <Button fx:id="btnNuevoBoletin"
                         maxWidth="9999"
                         styleClass="button-primary"

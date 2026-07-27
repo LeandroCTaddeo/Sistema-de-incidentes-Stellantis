@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import api.AdministracionApiClient;
+import api.AsignacionIncidenteApiResponse;
 import api.IncidenteApiClient;
 import models.Incidente;
 
@@ -38,11 +39,23 @@ public class IncidenteDAO {
         return apiClient().listar("RESUELTO");
     }
 
+    public List<Incidente> obtenerAsignados(int administradorId) {
+        return apiClient().listarAsignados("PENDIENTE", administradorId);
+    }
+
     public List<Incidente> buscarResueltos(String texto, LocalDate desde, LocalDate hasta) {
         return apiClient().buscarResueltos(texto, desde, hasta);
     }
 
     public boolean resolver(int id, int administradorId) {
         return administracionApiClient().resolverIncidente(id, administradorId);
+    }
+
+    public AsignacionIncidenteApiResponse tomar(int id, int administradorId) {
+        return administracionApiClient().tomarIncidente(id, administradorId);
+    }
+
+    public AsignacionIncidenteApiResponse liberar(int id, int administradorId) {
+        return administracionApiClient().liberarIncidente(id, administradorId);
     }
 }

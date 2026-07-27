@@ -21,18 +21,21 @@
             <Button fx:id="btnBandeja" text="📥 Bandeja"
                     maxWidth="999" styleClass="nav-button,nav-button-active"/>
 
-            <Button fx:id="btnMisIncidentes" text="📁 Mis incidentes"
+            <Button fx:id="btnMisCasos" text="🗂 Mis casos"
+                    maxWidth="999" styleClass="nav-button"/>
+
+            <Button fx:id="btnHistorial" text="📁 Historial"
                     maxWidth="999" styleClass="nav-button"/>
 
             <Button fx:id="btnReportes" text="📊 Reportes"
                     maxWidth="999" styleClass="nav-button"/>
 
-            <Button text="👥 Usuarios"
+            <Button fx:id="btnUsuarios" text="👥 Administradores"
                     maxWidth="999" styleClass="nav-button"/>
 
             <Region VBox.vgrow="ALWAYS"/>
 
-            <Label text="Administrador" styleClass="sidebar-user"/>
+            <Label fx:id="lblUsuarioActual" text="Administrador" styleClass="sidebar-user"/>
 
         </VBox>
 
@@ -121,6 +124,15 @@
                                    GridPane.columnIndex="1"
                                    GridPane.rowIndex="3"/>
 
+                            <Label text="Responsable"
+                                   styleClass="field-label"
+                                   GridPane.rowIndex="4"/>
+
+                            <Label fx:id="lblResponsable"
+                                   styleClass="field-value"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="4"/>
+
                         </GridPane>
 
                         <Label text="Descripción" styleClass="section-label"/>
@@ -142,6 +154,12 @@
                         <HBox spacing="10">
 
                             <Region HBox.hgrow="ALWAYS"/>
+
+                            <Button fx:id="btnTomarCaso"
+                                    text="Tomar caso" styleClass="button-primary"/>
+
+                            <Button fx:id="btnLiberarCaso"
+                                    text="Liberar caso" styleClass="button-secondary"/>
 
                             <Button fx:id="btnResolver"
                                     text="Resolver" styleClass="button-success"/>
