@@ -8,7 +8,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
 import dao.UsuarioDAO;
-import database.DatabaseException;
 import models.Usuario;
 
 public class Main extends Application {
@@ -39,7 +38,7 @@ public class Main extends Application {
 	        stage.setScene(scene);
 	        stage.setMaximized(true);
 	        stage.show();
-	        } catch (DatabaseException | IncidenteApiException | IllegalStateException e) {
+	        } catch (IncidenteApiException | IllegalStateException e) {
 	        mostrarErrorInicio(e.getMessage());
 	    } catch (Exception e) {
 	        mostrarErrorInicio("No se pudo iniciar la aplicación. Revise la configuración e inténtelo nuevamente.");
