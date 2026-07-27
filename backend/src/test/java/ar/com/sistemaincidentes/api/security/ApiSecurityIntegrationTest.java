@@ -41,6 +41,9 @@ class ApiSecurityIntegrationTest {
     @MockitoBean
     private IncidenteCreacionService creacionService;
 
+    @MockitoBean
+    private AuthenticatedUserGuard authenticatedUserGuard;
+
     @Test
     void permiteConsultarLaSaludSinToken() throws Exception {
         mockMvc.perform(get("/api/health"))

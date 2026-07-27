@@ -27,7 +27,7 @@ public class AdministracionApiClient {
     public AdministracionApiClient() {
         this(
                 System.getenv().getOrDefault("INCIDENTES_API_URL", "http://127.0.0.1:8080"),
-                System.getenv("INCIDENTES_API_TOKEN"),
+                ApiAutenticacion.credencialDesdeEntorno(),
                 HttpClient.newBuilder().connectTimeout(TIMEOUT).build()
         );
     }
@@ -35,6 +35,7 @@ public class AdministracionApiClient {
     AdministracionApiClient(String urlBase, String tokenApi, HttpClient httpClient) {
         this.urlBase = quitarBarraFinal(urlBase);
         this.tokenApi = validarToken(tokenApi);
+        ApiAutenticacion.validarTransporte(this.urlBase, this.tokenApi);
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
@@ -121,7 +122,7 @@ public class AdministracionApiClient {
                     .timeout(TIMEOUT)
                     .header("Accept", "application/json")
                     .header("Content-Type", "application/json; charset=UTF-8")
-                    .header(HEADER_API_KEY, tokenApi)
+                    .header(ApiAutenticacion.nombreCabecera(tokenApi), ApiAutenticacion.valorCabecera(tokenApi))
                     .method(
                             metodo,
                             HttpRequest.BodyPublishers.ofByteArray(

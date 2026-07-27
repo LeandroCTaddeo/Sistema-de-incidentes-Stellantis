@@ -17,19 +17,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import ar.com.sistemaincidentes.api.security.AuthenticatedUserGuard;
+
 @RestController
 @RequestMapping("/api/incidentes")
 public class IncidenteController {
 
     private final IncidenteConsultaService service;
     private final IncidenteCreacionService creacionService;
+    private final AuthenticatedUserGuard authenticatedUserGuard;
 
     public IncidenteController(
             IncidenteConsultaService service,
-            IncidenteCreacionService creacionService
+            IncidenteCreacionService creacionService,
+            AuthenticatedUserGuard authenticatedUserGuard
     ) {
         this.service = service;
         this.creacionService = creacionService;
+        this.authenticatedUserGuard = authenticatedUserGuard;
     }
 
     @GetMapping
@@ -54,6 +59,7 @@ public class IncidenteController {
             @Valid @RequestPart("incidente") IncidenteCreacionRequest incidente,
             @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes
     ) {
+        authenticatedUserGuard.validarUsuarioSolicitado(incidente.usuarioId());
         return creacionService.crear(incidente, imagenes);
     }
 }

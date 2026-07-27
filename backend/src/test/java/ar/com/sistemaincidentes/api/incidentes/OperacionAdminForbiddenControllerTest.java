@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import ar.com.sistemaincidentes.api.security.ApiKeyAuthenticationFilter;
 import ar.com.sistemaincidentes.api.security.SecurityConfig;
+import ar.com.sistemaincidentes.api.security.AuthenticatedUserGuard;
 import ar.com.sistemaincidentes.api.web.ApiExceptionHandler;
 
 @WebMvcTest(OperacionAdminController.class)
@@ -30,6 +31,9 @@ class OperacionAdminForbiddenControllerTest {
 
     @MockitoBean
     private OperacionAdminService service;
+
+    @MockitoBean
+    private AuthenticatedUserGuard authenticatedUserGuard;
 
     @Test
     void impideQueUnEmpleadoResuelvaIncidentes() throws Exception {

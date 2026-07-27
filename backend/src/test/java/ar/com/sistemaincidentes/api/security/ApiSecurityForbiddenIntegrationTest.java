@@ -41,6 +41,9 @@ class ApiSecurityForbiddenIntegrationTest {
     @MockitoBean
     private IncidenteCreacionService creacionService;
 
+    @MockitoBean
+    private AuthenticatedUserGuard authenticatedUserGuard;
+
     @Test
     void impideConsultarIncidentesSinRolAdministrador() throws Exception {
         mockMvc.perform(get("/api/incidentes")

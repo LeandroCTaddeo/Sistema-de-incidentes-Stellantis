@@ -49,8 +49,9 @@ La aplicación de escritorio utiliza estas variables de entorno:
 
 | Variable | Obligatoria | Descripción |
 | --- | --- | --- |
-| `INCIDENTES_API_URL` | No | URL del backend. En desarrollo usa `http://127.0.0.1:8080`. |
-| `INCIDENTES_API_TOKEN` | Sí | Token interno utilizado durante el desarrollo. Debe coincidir con `API_INTERNAL_TOKEN`. |
+| `INCIDENTES_API_URL` | No | URL del backend. En desarrollo usa `http://127.0.0.1:8080`; en producción debe usar `https://`. |
+| `INCIDENTES_API_TOKEN` | Sólo desarrollo | Token interno local. Debe coincidir con `API_INTERNAL_TOKEN`. |
+| `INCIDENTES_ACCESS_TOKEN` | Entorno corporativo | Access token OIDC obtenido mediante Corporate ID. Tiene prioridad sobre el token local y sólo se transmite por HTTPS. |
 
 `DB_USER`, `DB_PASSWORD`, `DB_URL`, `INCIDENTES_FILES_PATH` e `INCIDENTES_DATA_SOURCE` no se utilizan en JavaFX.
 
@@ -72,6 +73,25 @@ La aplicación de escritorio utiliza estas variables de entorno:
 | `INCIDENTES_MAX_IMAGE_BYTES` | No | Tamaño máximo de cada imagen. Por defecto: 10 MB. |
 | `INCIDENTES_MAX_IMAGE_DIMENSION` | No | Máximo permitido para ancho o alto. Por defecto: `12000`. |
 | `INCIDENTES_MAX_REQUEST_SIZE` | No | Tamaño máximo de una solicitud multipart. Por defecto: `50MB`. |
+
+### Perfil corporativo: HTTPS y OIDC
+
+El perfil `corporate` deshabilita la API key local, valida access tokens JWT contra el proveedor corporativo y obtiene el usuario desde el token firmado. Requiere:
+
+| Variable | Descripción |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE=corporate` | Activa la seguridad corporativa. |
+| `OIDC_ISSUER_URI` | URL oficial del emisor OIDC. |
+| `OIDC_AUDIENCE` | Identificador/audience registrado para esta API. |
+| `OIDC_USERNAME_CLAIM` | Claim que contiene la cuenta corporativa. Predeterminado: `preferred_username`. |
+| `OIDC_ROLES_CLAIM` | Claim que contiene los permisos. Predeterminado: `roles`. |
+| `OIDC_ADMIN_ROLE` | Rol corporativo que se traduce a administrador. |
+| `OIDC_EMPLOYEE_ROLE` | Rol corporativo que se traduce a empleado. |
+| `TLS_KEYSTORE_PATH` | Ruta al certificado de servidor PKCS#12. |
+| `TLS_KEYSTORE_PASSWORD` | Contraseña del almacén, mantenida fuera de Git. |
+| `TLS_KEY_ALIAS` | Alias del certificado. Predeterminado: `incidentes-api`. |
+
+El certificado debe ser emitido por una CA confiable para las computadoras de la empresa. El cliente no desactiva la validación TLS.
 
 ## Compilar y ejecutar
 
@@ -133,4 +153,6 @@ Las migraciones SQL versionadas se encuentran en `database/migrations`. Deben ap
 - El backend valida permisos para las operaciones administrativas.
 - Los binarios y archivos de configuración local están ignorados.
 
-El token compartido es una protección transitoria para desarrollo. Antes de exponer el backend en la red empresarial se debe incorporar HTTPS y Corporate ID/SSO mediante OIDC, obteniendo la identidad y el rol desde la autenticación del servidor.
+El token compartido queda limitado al perfil local de desarrollo. El perfil `corporate` exige HTTPS y Corporate ID/SSO mediante OIDC, toma la identidad desde el token firmado e ignora cualquier nombre de usuario enviado como parámetro por el cliente.
+
+La obtención interactiva del access token en JavaFX (inicio de sesión mediante navegador y PKCE) requiere que el equipo de Identidad entregue el issuer, client ID, audience, claims y URI de redirección autorizada. Hasta contar con esos datos, el cliente ya admite un access token mediante `INCIDENTES_ACCESS_TOKEN`, pero no inventa ni almacena credenciales corporativas.

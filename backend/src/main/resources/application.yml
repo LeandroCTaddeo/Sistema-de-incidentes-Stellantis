@@ -22,6 +22,7 @@ server:
 
 api:
   security:
+    identity-from-principal: false
     token: ${API_INTERNAL_TOKEN:}
     user: ${API_INTERNAL_USER:desktop-local}
     role: ${API_INTERNAL_ROLE:ADMIN}

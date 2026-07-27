@@ -39,7 +39,7 @@ public class ExpedienteApiClient {
     public ExpedienteApiClient() {
         this(
                 System.getenv().getOrDefault("INCIDENTES_API_URL", "http://127.0.0.1:8080"),
-                System.getenv("INCIDENTES_API_TOKEN"),
+                ApiAutenticacion.credencialDesdeEntorno(),
                 HttpClient.newBuilder().connectTimeout(TIMEOUT).build(),
                 crearCacheTemporal()
         );
@@ -53,6 +53,7 @@ public class ExpedienteApiClient {
     ) {
         this.urlBase = quitarBarraFinal(urlBase);
         this.tokenApi = validarToken(tokenApi);
+        ApiAutenticacion.validarTransporte(this.urlBase, this.tokenApi);
         this.httpClient = httpClient;
         this.cacheRaiz = cacheRaiz.toAbsolutePath().normalize();
         this.objectMapper = new ObjectMapper()
@@ -145,7 +146,7 @@ public class ExpedienteApiClient {
         return HttpRequest.newBuilder(uri)
                 .timeout(TIMEOUT)
                 .header("Accept", accept)
-                .header(HEADER_API_KEY, tokenApi)
+                .header(ApiAutenticacion.nombreCabecera(tokenApi), ApiAutenticacion.valorCabecera(tokenApi))
                 .GET()
                 .build();
     }
