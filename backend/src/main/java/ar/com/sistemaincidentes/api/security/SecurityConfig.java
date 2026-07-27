@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers("/api/incidentes/**").hasRole("ADMIN")
                         .requestMatchers("/api/reportes", "/api/reportes/**").hasRole("ADMIN")
+                        .requestMatchers("/api/usuarios/**").hasAnyRole("EMPLOYEE", "ADMIN")
                         .anyRequest().denyAll())
                 .exceptionHandling(excepciones -> excepciones
                         .authenticationEntryPoint((request, response, exception) ->
