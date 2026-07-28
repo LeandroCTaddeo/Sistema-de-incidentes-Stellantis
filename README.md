@@ -144,7 +144,18 @@ Las imágenes consultadas se descargan a una caché temporal de la sesión. El c
 
 ## Base de datos
 
-Las migraciones SQL versionadas se encuentran en `database/migrations`. Deben aplicarse de manera controlada y conservarse en el historial del repositorio. Para esta funcionalidad se deben aplicar, en orden, `V5__gestion_usuarios.sql` y `V6__asignacion_incidentes.sql`.
+Las migraciones SQL versionadas se encuentran en `database/migrations`. Deben aplicarse de manera controlada y conservarse en el historial del repositorio. Para disponer de todas las funciones actuales se deben aplicar, en orden, `V5__gestion_usuarios.sql`, `V6__asignacion_incidentes.sql` y `V7__firmantes_expediente.sql`.
+
+### Firmas del expediente
+
+La migración V7 crea el catálogo configurable de firmantes de Palomar y conserva una copia histórica de la selección realizada para cada expediente. Al exportar por primera vez:
+
+- López Carlos Argentino se incorpora obligatoriamente.
+- El administrador selecciona exactamente uno entre los firmantes alternativos activos.
+- La selección queda guardada y se reutiliza en exportaciones posteriores.
+- El bloque identificatorio se agrega al final del expediente, antes de la página de cierre.
+
+Los firmantes se administran desde la opción **Firmantes** de la vista de administración. Deshabilitar o editar un firmante no modifica las firmas ya guardadas en expedientes anteriores.
 
 ## Seguridad
 

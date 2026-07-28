@@ -2,7 +2,11 @@ package services;
 
 import java.awt.Color;
 import java.net.URL;
+import java.util.Comparator;
+import java.util.List;
 
+import api.FirmaExpedienteApiResponse;
+import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
@@ -12,6 +16,8 @@ import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.ColumnText;
 import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -44,17 +50,18 @@ public class FormularioPDFRenderer {
 
         escribirCampo(cb, 105, 405, 300, 421, valor(i.getArea()), texto);
         escribirCampo(cb, 430, 405, 540, 421, valor(i.getSuperiorInmediato()), texto);
-        boolean historialContinua = escribirCampo(
-				cb, 40, 215, 550, 350, valor(i.getHistorial()), texto
-		);
+        ColumnText historialPendiente = escribirHistorialInicial(
+                cb, valor(i.getHistorial()), texto
+        );
 
         escribirCampo(cb, 455, 40, 560, 55, "Prioridad: " + valor(String.valueOf(i.getPrioridad())), texto);
+
+        continuarHistorial(documento, writer, historialPendiente);
 
 		agregarContinuacionSiHaceFalta(
 				documento,
 				"BOLETÍN ORIGINAL DEL EMPLEADO",
-				descripcionContinua ? valor(i.getDescripcion()) : null,
-				historialContinua ? valor(i.getHistorial()) : null
+				descripcionContinua ? valor(i.getDescripcion()) : null
 		);
     }
 
@@ -81,18 +88,107 @@ public class FormularioPDFRenderer {
         escribirCampo(cb, 105, 405, 300, 421, valor(b.getArea()), texto);
         escribirCampo(cb, 430, 405, 540, 421, valor(b.getSuperiorInmediato()), texto);
 
-        boolean historialContinua = escribirCampo(
-				cb, 40, 215, 550, 350, valor(b.getHistorial()), texto
-		);
+        ColumnText historialPendiente = escribirHistorialInicial(
+                cb, valor(b.getHistorial()), texto
+        );
 
         escribirCampo(cb, 455, 40, 560, 55, "Prioridad: " + valor(b.getPrioridad()), texto);
+
+        continuarHistorial(documento, writer, historialPendiente);
 
 		agregarContinuacionSiHaceFalta(
 				documento,
 				"BOLETÍN DE INVESTIGACIÓN N° " + numero,
-				descripcionContinua ? valor(b.getDescripcion()) : null,
-				historialContinua ? valor(b.getHistorial()) : null
+				descripcionContinua ? valor(b.getDescripcion()) : null
 		);
+    }
+
+    public void renderImagenAdjunta(Document documento, PdfWriter writer, Image imagen)
+            throws Exception {
+        documento.newPage();
+
+        PdfContentByte cb = writer.getDirectContent();
+        Font blanco = FontFactory.getFont(
+                FontFactory.HELVETICA_BOLD, 9, Color.WHITE
+        );
+        barraAzul(cb, 30, 795, 535, 22, "IMÁGENES ADJUNTAS:", blanco);
+
+        imagen.scaleToFit(535, 715);
+        float x = (documento.getPageSize().getWidth() - imagen.getScaledWidth()) / 2;
+        float y = 55 + (715 - imagen.getScaledHeight()) / 2;
+        imagen.setAbsolutePosition(x, y);
+        documento.add(imagen);
+        writer.setPageEmpty(false);
+    }
+
+    public void renderFirmasExpediente(
+            Document documento,
+            PdfWriter writer,
+            List<FirmaExpedienteApiResponse> firmas
+    ) throws Exception {
+        if (firmas == null || firmas.size() != 2) {
+            throw new IllegalArgumentException(
+                    "El expediente debe tener exactamente dos firmantes."
+            );
+        }
+
+        List<FirmaExpedienteApiResponse> ordenadas = firmas.stream()
+                .sorted(Comparator.comparingInt(FirmaExpedienteApiResponse::orden))
+                .toList();
+
+        documento.newPage();
+
+        Font encabezado = FontFactory.getFont(
+                FontFactory.HELVETICA_BOLD, 10, Color.BLACK
+        );
+        Font nombre = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.BLACK);
+        Font area = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
+
+        PdfPTable tabla = new PdfPTable(3);
+        tabla.setTotalWidth(535);
+        tabla.setLockedWidth(true);
+        tabla.setWidths(new float[] { 1, 1, 1 });
+
+        tabla.addCell(celdaEncabezado("EMISOR:\nLEGAJO:", encabezado));
+        tabla.addCell(celdaEncabezado("PUESTO:", encabezado));
+        tabla.addCell(celdaEncabezado("", encabezado));
+
+        tabla.addCell(celdaFirmante(ordenadas.get(0), nombre, area));
+        PdfPCell centro = new PdfPCell(new Phrase(""));
+        centro.setFixedHeight(92);
+        tabla.addCell(centro);
+        tabla.addCell(celdaFirmante(ordenadas.get(1), nombre, area));
+
+        tabla.writeSelectedRows(0, -1, 30, 760, writer.getDirectContent());
+        writer.setPageEmpty(false);
+    }
+
+    private PdfPCell celdaEncabezado(String texto, Font fuente) {
+        PdfPCell celda = new PdfPCell(new Phrase(texto, fuente));
+        celda.setBackgroundColor(AZUL);
+        celda.setFixedHeight(32);
+        celda.setPaddingLeft(6);
+        celda.setPaddingTop(4);
+        celda.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        return celda;
+    }
+
+    private PdfPCell celdaFirmante(
+            FirmaExpedienteApiResponse firmante,
+            Font fuenteNombre,
+            Font fuenteArea
+    ) {
+        Phrase contenido = new Phrase();
+        contenido.add(new Chunk(valor(firmante.nombre()) + "\n", fuenteNombre));
+        contenido.add(new Chunk(valor(firmante.areaLinea1()) + "\n", fuenteArea));
+        contenido.add(new Chunk(valor(firmante.areaLinea2()), fuenteArea));
+
+        PdfPCell celda = new PdfPCell(contenido);
+        celda.setFixedHeight(92);
+        celda.setHorizontalAlignment(Element.ALIGN_CENTER);
+        celda.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        celda.setPadding(8);
+        return celda;
     }
 
     private void dibujarFormularioBase(Document documento, PdfWriter writer, String tituloFormulario) throws Exception {
@@ -163,10 +259,6 @@ public class FormularioPDFRenderer {
         cb.rectangle(30, 200, 535, 160);
         cb.stroke();
 
-        barraAzul(cb, 30, 160, 535, 22, "IMÁGENES ADJUNTAS:", blanco);
-
-        cb.rectangle(30, 60, 535, 100);
-        cb.stroke();
     }
 
     private void campo(PdfContentByte cb, float x, float y, float w, float h, String label, Font fuente) {
@@ -221,9 +313,51 @@ public class FormularioPDFRenderer {
 		return ColumnText.hasMoreText(estado);
     }
 
+    private ColumnText escribirHistorialInicial(PdfContentByte cb, String historial, Font fuente)
+            throws Exception {
+        ColumnText columna = new ColumnText(cb);
+        columna.setSimpleColumn(
+                new Phrase(valor(historial), fuente),
+                40, 215, 550, 350,
+                12,
+                Element.ALIGN_JUSTIFIED
+        );
+
+        int estado = columna.go();
+        return ColumnText.hasMoreText(estado) ? columna : null;
+    }
+
+    private void continuarHistorial(Document documento, PdfWriter writer, ColumnText columna)
+            throws Exception {
+        while (columna != null) {
+            documento.newPage();
+
+            PdfContentByte cb = writer.getDirectContent();
+            Font blanco = FontFactory.getFont(
+                    FontFactory.HELVETICA_BOLD, 9, Color.WHITE
+            );
+
+            barraAzul(cb, 30, 795, 535, 22, "HISTORIAL:", blanco);
+            cb.rectangle(30, 40, 535, 755);
+            cb.stroke();
+
+            columna.setCanvas(cb);
+            columna.setSimpleColumn(
+                    40, 55, 555, 785,
+                    12,
+                    Element.ALIGN_JUSTIFIED
+            );
+
+            int estado = columna.go();
+            if (!ColumnText.hasMoreText(estado)) {
+                columna = null;
+            }
+        }
+    }
+
 	private void agregarContinuacionSiHaceFalta(Document documento, String boletin,
-			String descripcionCompleta, String historialCompleto) throws Exception {
-		if (descripcionCompleta == null && historialCompleto == null) return;
+			String descripcionCompleta) throws Exception {
+		if (descripcionCompleta == null) return;
 
 		documento.newPage();
 
@@ -247,15 +381,6 @@ public class FormularioPDFRenderer {
 			documento.add(contenido);
 		}
 
-		if (historialCompleto != null) {
-			Paragraph etiqueta = new Paragraph("HISTORIAL COMPLETO", subtitulo);
-			etiqueta.setSpacingAfter(8);
-			documento.add(etiqueta);
-
-			Paragraph contenido = new Paragraph(historialCompleto, cuerpo);
-			contenido.setLeading(14);
-			documento.add(contenido);
-		}
 	}
 
     private String valor(Object obj) {

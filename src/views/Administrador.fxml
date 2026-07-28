@@ -33,6 +33,9 @@
             <Button fx:id="btnUsuarios" text="👥 Administradores"
                     maxWidth="999" styleClass="nav-button"/>
 
+            <Button fx:id="btnFirmantes" text="✍ Firmantes"
+                    maxWidth="999" styleClass="nav-button"/>
+
             <Region VBox.vgrow="ALWAYS"/>
 
             <Label fx:id="lblUsuarioActual" text="Administrador" styleClass="sidebar-user"/>

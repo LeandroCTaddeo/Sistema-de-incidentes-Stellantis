@@ -46,6 +46,7 @@ public class CorporateSecurityConfig {
                         .hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers("/api/incidentes/**").hasRole("ADMIN")
                         .requestMatchers("/api/reportes", "/api/reportes/**").hasRole("ADMIN")
+                        .requestMatchers("/api/firmantes", "/api/firmantes/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/actual")
                         .hasAnyRole("EMPLOYEE", "ADMIN")
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
