@@ -58,6 +58,7 @@ public class AdministradorController {
     @FXML private Button btnHistorial;
     @FXML private Button btnReportes;
     @FXML private Button btnUsuarios;
+    @FXML private Button btnFirmantes;
     @FXML private Button btnTomarCaso;
     @FXML private Button btnLiberarCaso;
     @FXML private Label lblResponsable;
@@ -89,6 +90,7 @@ public class AdministradorController {
         btnHistorial.setOnAction(e -> mostrarHistorial());
         btnReportes.setOnAction(e -> abrirReportes());
         btnUsuarios.setOnAction(e -> abrirUsuarios());
+        btnFirmantes.setOnAction(e -> abrirFirmantes());
         btnTomarCaso.setOnAction(e -> tomarCaso());
         btnLiberarCaso.setOnAction(e -> liberarCaso());
         btnResolver.setOnAction(e -> resolverSeleccionado());
@@ -315,6 +317,22 @@ public class AdministradorController {
         }
     }
 
+    private void abrirFirmantes() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/Firmantes.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Gestión de firmantes");
+            stage.setScene(new Scene(root, 1200, 760));
+            stage.setMaximized(true);
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarError("No se pudo abrir la gestión de firmantes.");
+        }
+    }
+
     private void activarNavegacion(Button activo) {
         btnBandeja.getStyleClass().remove("nav-button-active");
         btnMisCasos.getStyleClass().remove("nav-button-active");
@@ -469,7 +487,11 @@ public class AdministradorController {
     private void exportarSeleccionado() {
         if (incidenteSeleccionado == null) return;
         try {
-            pdfService.exportarExpediente(incidenteSeleccionado, btnExportar.getScene().getWindow());
+            pdfService.exportarExpediente(
+                    incidenteSeleccionado,
+                    usuarioActual.getId(),
+                    btnExportar.getScene().getWindow()
+            );
         } catch (Exception e) {
             mostrarError("No se pudo exportar el expediente. "
                     + (e.getMessage() == null ? "" : e.getMessage()));

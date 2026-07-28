@@ -306,6 +306,7 @@ public class DetalleCasoAdminController {
         try {
             boolean exportado = pdfService.exportarExpediente(
                     incidenteActual,
+                    usuarioActual.getId(),
                     btnExportar.getScene().getWindow()
             );
 

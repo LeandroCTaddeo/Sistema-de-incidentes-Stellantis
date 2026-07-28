@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.FirmantesController"
+            stylesheets="@../resources/css/admin.css"
+            styleClass="users-root">
+
+    <top>
+        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="topbar">
+            <Label text="Gestión de firmantes" styleClass="page-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Planta Palomar" styleClass="status-assigned"/>
+            <Button fx:id="btnNuevo" text="+ Nuevo firmante" styleClass="button-primary"/>
+            <Button fx:id="btnCerrar" text="Cerrar" styleClass="button-secondary"/>
+        </HBox>
+    </top>
+
+    <center>
+        <HBox spacing="18" styleClass="users-content">
+            <VBox spacing="12" styleClass="users-table-card" HBox.hgrow="ALWAYS">
+                <Label text="Firmantes disponibles" styleClass="section-title"/>
+                <TableView fx:id="tablaFirmantes" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colNombre" text="Nombre" prefWidth="220"/>
+                        <TableColumn fx:id="colArea" text="Área" prefWidth="190"/>
+                        <TableColumn fx:id="colUbicacion" text="Ubicación" prefWidth="150"/>
+                        <TableColumn fx:id="colTipo" text="Regla" prefWidth="120"/>
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="120"/>
+                    </columns>
+                    <placeholder>
+                        <Label text="No se encontraron firmantes." styleClass="empty-state"/>
+                    </placeholder>
+                </TableView>
+            </VBox>
+
+            <VBox prefWidth="370" minWidth="330" spacing="12" styleClass="users-form-card">
+                <Label fx:id="lblFormulario" text="Nuevo firmante" styleClass="section-title"/>
+                <Label fx:id="lblEstado" text="El firmante se creará activo"
+                       wrapText="true" styleClass="status-active"/>
+
+                <Label text="Nombre y apellido" styleClass="field-label"/>
+                <TextField fx:id="txtNombre" promptText="Nombre Apellido"/>
+
+                <Label text="Área - primera línea" styleClass="field-label"/>
+                <TextField fx:id="txtArea" promptText="Security and Facilities"/>
+
+                <Label text="Área - segunda línea" styleClass="field-label"/>
+                <TextField fx:id="txtUbicacion" promptText="Palomar Plant"/>
+
+                <Label text="Regla de selección" styleClass="field-label"/>
+                <ComboBox fx:id="cmbTipo" maxWidth="Infinity"/>
+
+                <Label wrapText="true" styleClass="card-meta"
+                       text="El firmante obligatorio aparece siempre. Al exportar se elige exactamente una de las alternativas activas."/>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <Button fx:id="btnGuardar" text="Guardar firmante"
+                        maxWidth="Infinity" styleClass="button-primary"/>
+                <Button fx:id="btnCambiarEstado" text="Deshabilitar"
+                        maxWidth="Infinity" styleClass="button-danger"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

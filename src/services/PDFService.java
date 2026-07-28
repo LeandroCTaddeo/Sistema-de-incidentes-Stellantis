@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
+import api.FirmaExpedienteApiResponse;
+import api.FirmanteApiClient;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
@@ -30,8 +32,14 @@ public class PDFService {
     private ImagenDAO imagenDAO = new ImagenDAO();
     private AlmacenamientoImagenService almacenamientoImagenes =
             new AlmacenamientoImagenService();
+    private FirmanteApiClient firmanteApiClient = new FirmanteApiClient();
+    private SelectorFirmantesDialog selectorFirmantes = new SelectorFirmantesDialog();
 
-    public boolean exportarExpediente(Incidente incidente, Window ventana) throws Exception {
+    public boolean exportarExpediente(
+            Incidente incidente,
+            int administradorId,
+            Window ventana
+    ) throws Exception {
 
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Guardar expediente");
@@ -46,13 +54,18 @@ public class PDFService {
             return false;
         }
 
+        List<FirmaExpedienteApiResponse> firmas = obtenerFirmas(
+                incidente, administradorId, ventana
+        );
+        if (firmas == null) return false;
+
 		Path destino = archivo.toPath().toAbsolutePath();
 		Path carpetaDestino = destino.getParent();
 		Path temporal = Files.createTempFile(carpetaDestino, ".expediente-", ".tmp");
 		boolean completado = false;
 
 		try {
-			generarExpediente(incidente, temporal);
+			generarExpediente(incidente, firmas, temporal);
 			moverResultado(temporal, destino);
 			completado = true;
 		} finally {
@@ -62,7 +75,11 @@ public class PDFService {
 		return true;
 	}
 
-	private void generarExpediente(Incidente incidente, Path archivoTemporal) throws Exception {
+	private void generarExpediente(
+            Incidente incidente,
+            List<FirmaExpedienteApiResponse> firmas,
+            Path archivoTemporal
+    ) throws Exception {
 		try (FileOutputStream salida = new FileOutputStream(archivoTemporal.toFile())) {
             Document documento = new Document(PageSize.A4, 30, 30, 20, 20);
             try {
@@ -71,6 +88,7 @@ public class PDFService {
 
                 FormularioPDFRenderer renderer = new FormularioPDFRenderer();
                 renderer.renderBoletinEmpleado(documento, writer, incidente);
+                agregarImagenes(documento, writer, renderer, incidente.getId());
 
                 List<BoletinAdmin> boletines =
                         boletinDAO.obtenerPorIncidente(incidente.getId());
@@ -82,7 +100,7 @@ public class PDFService {
                     numero++;
                 }
 
-                agregarImagenes(documento, incidente.getId());
+                renderer.renderFirmasExpediente(documento, writer, firmas);
                 agregarFinExpediente(documento, incidente.getId());
             } finally {
                 if (documento.isOpen()) {
@@ -90,6 +108,24 @@ public class PDFService {
                 }
             }
         }
+    }
+
+    private List<FirmaExpedienteApiResponse> obtenerFirmas(
+            Incidente incidente,
+            int administradorId,
+            Window ventana
+    ) {
+        List<FirmaExpedienteApiResponse> existentes =
+                firmanteApiClient.obtenerSeleccion(incidente.getId());
+        if (!existentes.isEmpty()) return existentes;
+
+        var seleccion = selectorFirmantes.seleccionar(
+                firmanteApiClient.listar(false), ventana
+        );
+        if (seleccion.isEmpty()) return null;
+        return firmanteApiClient.seleccionar(
+                incidente.getId(), administradorId, seleccion.get()
+        );
     }
 
 	private void moverResultado(Path temporal, Path destino) throws Exception {
@@ -105,7 +141,8 @@ public class PDFService {
 		}
 	}
 
-    private void agregarImagenes(Document documento, int incidenteId) throws Exception {
+    private void agregarImagenes(Document documento, PdfWriter writer,
+            FormularioPDFRenderer renderer, int incidenteId) throws Exception {
         List<Imagen> imagenes = imagenDAO.obtenerPorIncidente(incidenteId);
         int numero = 1;
 
@@ -125,16 +162,6 @@ public class PDFService {
 				);
             }
 
-            documento.newPage();
-
-            Paragraph titulo = new Paragraph(
-                    "IMAGEN ADJUNTA N° " + numero,
-                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 15)
-            );
-            titulo.setAlignment(Element.ALIGN_CENTER);
-            titulo.setSpacingAfter(15);
-            documento.add(titulo);
-
 			com.lowagie.text.Image imagen;
 			try {
 				imagen = com.lowagie.text.Image.getInstance(archivoImagen.getAbsolutePath());
@@ -144,9 +171,7 @@ public class PDFService {
 						e
 				);
 			}
-            imagen.scaleToFit(535, 720);
-            imagen.setAlignment(Element.ALIGN_CENTER);
-            documento.add(imagen);
+            renderer.renderImagenAdjunta(documento, writer, imagen);
 
             numero++;
         }
